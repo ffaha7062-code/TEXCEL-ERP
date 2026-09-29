@@ -1,0 +1,151 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.UserViewModel
+@{
+    ViewBag.Title = "Edit User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles {
+    <style>
+        .form-container { max-width: 800px; margin: 0 auto; }
+        .form-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 32px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+        .form-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .form-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        .form-header h2 i { color: var(--gold); margin-right: 10px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-group label .required { color: #ef4444; }
+        .form-group input, .form-group select {
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-body);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(108, 60, 176, 0.08);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        .btn-cancel {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: var(--bg-body);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        .btn-cancel:hover { background: var(--border-color); color: var(--text-primary); }
+
+        @@media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-card { padding: 20px; }
+        }
+    </style>
+}
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h2><i class="fas fa-user-edit"></i> Edit User</h2>
+        </div>
+
+        @using (Html.BeginForm("Edit", "User", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
+            @Html.HiddenFor(m => m.Email)
+
+            if (!ViewData.ModelState.IsValid)
+            {
+                <div style="background:rgba(239,68,68,0.1); color:#ef4444; padding:12px; border-radius:10px; margin-bottom:16px; font-size:13px;">
+                    @Html.ValidationSummary(true, "")
+                </div>
+            }
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>First Name <span class="required">*</span></label>
+                    @Html.TextBoxFor(m => m.FirstName)
+                </div>
+
+                <div class="form-group">
+                    <label>Last Name</label>
+                    @Html.TextBoxFor(m => m.LastName)
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    @Html.TextBoxFor(m => m.Email, new { @readonly = "readonly", @style = "opacity:0.7;" })
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    @Html.TextBoxFor(m => m.PhoneNumber)
+                </div>
+
+                <div class="form-group">
+                    <label>Branch</label>
+                    @Html.DropDownListFor(m => m.BranchId,
+                        new SelectList(Model.Branches ?? new System.Collections.Generic.List<TEXCEL_ERP.Models.Entities.Branch>(), "BranchId", "BranchName", Model.BranchId),
+                        "-- Select Branch --")
+                </div>
+
+                <div class="form-group">
+                    <label>Role <span class="required">*</span></label>
+                    @Html.DropDownListFor(m => m.RoleName,
+                        new SelectList(Model.Roles ?? new System.Collections.Generic.List<string>(), Model.RoleName),
+                        "-- Select Role --")
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary-custom">
+                    <i class="fas fa-save"></i> Update User
+                </button>
+                <a href="@Url.Action("Index", "User")" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        }
+    </div>
+</div>

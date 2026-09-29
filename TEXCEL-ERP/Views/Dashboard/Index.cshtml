@@ -1,0 +1,663 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.DashboardViewModel
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles {
+    <style>
+        /* ============================================= */
+        /* PAGE HEADER                                   */
+        /* ============================================= */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-header .header-left h1 {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header .header-left h1 .gold-text {
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-header .header-left p {
+            color: var(--text-secondary);
+            margin: 4px 0 0 0;
+            font-size: 15px;
+        }
+
+        .page-header .header-right .date-badge {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .page-header .header-right .date-badge i { color: var(--gold); }
+
+        /* ============================================= */
+        /* STAT CARDS                                    */
+        /* ============================================= */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 22px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius);
+            padding: 24px 26px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 14px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.05) rotate(-3deg);
+        }
+
+        .stat-icon.purple { background: rgba(108, 60, 176, 0.12); color: #8b5cf6; }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .stat-icon.amber { background: rgba(251, 191, 36, 0.15); color: #f59e0b; }
+        .stat-icon.rose { background: rgba(239, 68, 68, 0.10); color: #ef4444; }
+        .stat-icon.teal { background: rgba(20, 184, 166, 0.12); color: #14b8a6; }
+        .stat-icon.cyan { background: rgba(59, 130, 246, 0.10); color: #3b82f6; }
+
+        .stat-card .stat-number {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-card .stat-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .stat-card .stat-trend {
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+
+        .stat-trend.up { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .stat-trend.down { background: rgba(239, 68, 68, 0.10); color: #ef4444; }
+
+        /* ============================================= */
+        /* QUICK ACTIONS                                 */
+        /* ============================================= */
+        .quick-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .quick-actions .action-btn {
+            padding: 14px 28px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+        }
+
+        .quick-actions .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-light);
+        }
+
+        .quick-actions .action-btn i { color: var(--primary-light); font-size: 16px; }
+
+        .quick-actions .action-btn.primary {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            box-shadow: 0 8px 24px rgba(108, 60, 176, 0.30);
+        }
+
+        .quick-actions .action-btn.primary i { color: white; }
+
+        .quick-actions .action-btn.primary:hover {
+            box-shadow: 0 12px 36px rgba(108, 60, 176, 0.40);
+        }
+
+        .quick-actions .action-btn.gold {
+            background: var(--gold-gradient);
+            border: none;
+            color: #1a1a2e;
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.30);
+        }
+
+        .quick-actions .action-btn.gold i { color: #1a1a2e; }
+
+        /* ============================================= */
+        /* DASHBOARD GRID                                */
+        /* ============================================= */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        @@media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ============================================= */
+        /* CARD PREMIUM                                  */
+        /* ============================================= */
+        .card-premium {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            padding: 24px 26px;
+            transition: var(--transition);
+        }
+
+        .card-premium:hover { box-shadow: var(--shadow-hover); }
+
+        .card-header-premium {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .card-header-premium h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .card-header-premium h3 i { color: var(--gold); margin-right: 8px; }
+
+        .card-header-premium .badge-link {
+            font-size: 13px;
+            color: var(--gold);
+            font-weight: 500;
+            text-decoration: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.15);
+        }
+
+        .card-header-premium .badge-link:hover { background: rgba(251, 191, 36, 0.15); }
+
+        /* Progress */
+        .progress-item { margin-bottom: 16px; }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            background: var(--border-color);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: var(--primary-gradient);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @@keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Order Items */
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .order-item:last-child { border-bottom: none; }
+        .order-item:hover { padding-left: 8px; }
+
+        .order-info .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .order-info .meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .order-status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 16px;
+            border-radius: 20px;
+        }
+
+        .order-status.delivered { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .order-status.production { background: rgba(251, 191, 36, 0.15); color: #f59e0b; }
+        .order-status.cutting { background: rgba(59, 130, 246, 0.10); color: #3b82f6; }
+        .order-status.pending { background: rgba(239, 68, 68, 0.10); color: #ef4444; }
+
+        /* Task Items */
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .task-item:last-child { border-bottom: none; }
+        .task-item:hover { padding-left: 8px; }
+
+        .task-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-check.done {
+            background: var(--primary-gradient);
+            border-color: var(--primary-light);
+            color: white;
+            font-size: 10px;
+        }
+
+        .task-info { flex: 1; }
+        .task-info .title { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+        .task-info .time { font-size: 12px; color: var(--text-muted); }
+
+        .task-priority {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 3px 14px;
+            border-radius: 20px;
+        }
+
+        .task-priority.high { background: rgba(239, 68, 68, 0.10); color: #ef4444; }
+        .task-priority.medium { background: rgba(251, 191, 36, 0.15); color: #f59e0b; }
+        .task-priority.low { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+
+        /* Level badges */
+        .level-badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(108, 60, 176, 0.10);
+            color: var(--primary-light);
+            border: 1px solid rgba(108, 60, 176, 0.15);
+        }
+
+        .level-badge.gold {
+            background: rgba(251, 191, 36, 0.12);
+            color: #f59e0b;
+            border-color: rgba(251, 191, 36, 0.20);
+        }
+
+        /* Responsive */
+        @@media (max-width: 1200px) {
+            .stat-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @@media (max-width: 992px) {
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .page-header .header-left h1 { font-size: 24px; }
+        }
+
+        @@media (max-width: 768px) {
+            .stat-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+            .stat-card { padding: 18px; }
+            .stat-card .stat-number { font-size: 22px; }
+            .stat-card .stat-icon { width: 44px; height: 44px; font-size: 18px; }
+            .page-header { flex-direction: column; }
+            .quick-actions .action-btn { padding: 10px 18px; font-size: 13px; }
+        }
+
+        @@media (max-width: 480px) {
+            .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .stat-number { font-size: 18px; }
+            .stat-card .stat-label { font-size: 11px; }
+            .stat-card .stat-icon { width: 36px; height: 36px; font-size: 14px; }
+            .page-header .header-left h1 { font-size: 20px; }
+        }
+
+        @@keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .stat-card, .card-premium {
+            animation: fadeUp 0.6s ease both;
+        }
+        .stat-card:nth-child(2) { animation-delay: 0.05s; }
+        .stat-card:nth-child(3) { animation-delay: 0.10s; }
+        .stat-card:nth-child(4) { animation-delay: 0.15s; }
+        .stat-card:nth-child(5) { animation-delay: 0.20s; }
+        .stat-card:nth-child(6) { animation-delay: 0.25s; }
+    </style>
+}
+
+<!-- ============================================= -->
+<!-- PAGE HEADER (Welcome Banner ki jagah)         -->
+<!-- ============================================= -->
+<div class="page-header">
+    <div class="header-left">
+        <h1>Welcome to <span class="gold-text">TEXCEL ERP</span>™</h1>
+        <p>Enterprise dashboard — real-time insights for your textile &amp; garment operations.</p>
+    </div>
+    <div class="header-right">
+        <div class="date-badge">
+            <i class="fas fa-calendar-alt"></i>
+            <span id="currentDate"></span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- STAT CARDS                                    -->
+<!-- ============================================= -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+        <div class="stat-number">@Model.TotalEmployees.ToString("N0")</div>
+        <div class="stat-label">Total Employees</div>
+        <div class="stat-trend up"><i class="fas fa-arrow-up"></i> +12%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+        <div class="stat-number">@Model.PresentToday.ToString("N0")</div>
+        <div class="stat-label">Present Today</div>
+        <div class="stat-trend up"><i class="fas fa-arrow-up"></i> +8%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon amber"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-number">@Model.MonthlyPayroll.ToString("N0")</div>
+        <div class="stat-label">Monthly Payroll</div>
+        <div class="stat-trend down"><i class="fas fa-arrow-down"></i> -2%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon teal"><i class="fas fa-cube"></i></div>
+        <div class="stat-number">@Model.TotalFabricStock.ToString("N0")</div>
+        <div class="stat-label">Fabric Stock (Mtr)</div>
+        <div class="stat-trend up"><i class="fas fa-arrow-up"></i> +5%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon cyan"><i class="fas fa-tshirt"></i></div>
+        <div class="stat-number">@Model.MonthlyProduction.ToString("N0")</div>
+        <div class="stat-label">Monthly Production</div>
+        <div class="stat-trend up"><i class="fas fa-arrow-up"></i> +18%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon rose"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div class="stat-number">@Model.MonthlySales.ToString("N0")</div>
+        <div class="stat-label">Monthly Sales</div>
+        <div class="stat-trend up"><i class="fas fa-arrow-up"></i> +22%</div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- QUICK ACTIONS                                 -->
+<!-- ============================================= -->
+<div class="quick-actions">
+    <a href="@Url.Action("Create", "Employee")" class="action-btn primary">
+        <i class="fas fa-user-plus"></i> Add Employee
+    </a>
+    <a href="@Url.Action("Process", "Payroll")" class="action-btn gold">
+        <i class="fas fa-play"></i> Run Payroll
+    </a>
+    <a href="@Url.Action("Create", "Fabric")" class="action-btn">
+        <i class="fas fa-boxes"></i> Add Stock
+    </a>
+    <a href="@Url.Action("Mark", "Attendance")" class="action-btn">
+        <i class="fas fa-clipboard-check"></i> Mark Attendance
+    </a>
+    <a href="@Url.Action("Index", "Report")" class="action-btn">
+        <i class="fas fa-chart-line"></i> View Reports
+    </a>
+    <a href="@Url.Action("Index", "Settings")" class="action-btn">
+        <i class="fas fa-cog"></i> Settings
+    </a>
+</div>
+
+<!-- ============================================= -->
+<!-- CHART                                         -->
+<!-- ============================================= -->
+<div class="card-premium" style="margin-bottom:28px;">
+    <div class="card-header-premium">
+        <h3><i class="fas fa-chart-line"></i> Sales & Production Trend</h3>
+        <span class="badge-link">@DateTime.Now.Year</span>
+    </div>
+    <div style="position:relative; height:320px;">
+        <canvas id="salesProductionChart"></canvas>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- DASHBOARD GRID                                -->
+<!-- ============================================= -->
+<div class="dashboard-grid">
+    <!-- LEFT -->
+    <div>
+        <div class="card-premium" style="margin-bottom:24px;">
+            <div class="card-header-premium">
+                <h3><i class="fas fa-chart-pie"></i> Production Progress</h3>
+                <span class="badge-link">This Week</span>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>Cutting</span><span>80%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:80%;"></div></div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>Sewing</span><span>65%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:65%;"></div></div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>Finishing</span><span>92%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:92%;"></div></div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>QC &amp; Packing</span><span>48%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:48%;"></div></div>
+            </div>
+        </div>
+
+        <div class="card-premium">
+            <div class="card-header-premium">
+                <h3><i class="fas fa-truck-fast"></i> Recent Orders</h3>
+                <a href="@Url.Action("Index", "Sales")" class="badge-link">View All</a>
+            </div>
+            @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+            {
+                foreach (var order in Model.RecentOrders)
+                {
+                    <div class="order-item">
+                        <div class="order-info">
+                            <span class="title">#@order.OrderNumber — @order.CustomerName</span>
+                            <span class="meta">@order.DateFormatted • PKR @order.Amount.ToString("N0")</span>
+                        </div>
+                        <span class="order-status delivered">@order.Status</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <p style="text-align:center;color:var(--text-muted);padding:20px;">No recent orders</p>
+            }
+        </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+        <div class="card-premium" style="margin-bottom:24px;">
+            <div class="card-header-premium">
+                <h3><i class="fas fa-list-check"></i> Today's Tasks</h3>
+                <span class="badge-link">Priority</span>
+            </div>
+            @if (Model.RecentTasks != null && Model.RecentTasks.Any())
+            {
+                foreach (var task in Model.RecentTasks)
+                {
+                    <div class="task-item">
+                        <div class="task-check @(task.IsCompleted ? "done" : "")">
+                            @if (task.IsCompleted)
+                            {<i class="fas fa-check"></i>}
+                        </div>
+                        <div class="task-info">
+                            <div class="title">@task.Title</div>
+                            <div class="time">@task.DueDateFormatted</div>
+                        </div>
+                        <span class="task-priority @task.Priority.ToLower()">@task.Priority</span>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="card-premium">
+            <div class="card-header-premium">
+                <h3><i class="fas fa-chart-simple"></i> Company KPIs</h3>
+                <span class="badge-link">This Month</span>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>Production Efficiency</span><span>@Model.ProductionEfficiency%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:@(Model.ProductionEfficiency)%;"></div></div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>Order Fulfillment</span><span>@Model.OrderFulfillment%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:@(Model.OrderFulfillment)%;"></div></div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>Attendance Rate</span><span>@Model.AttendancePercentage%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:@(Model.AttendancePercentage)%;"></div></div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                <span class="level-badge gold">🏆 Revenue +22%</span>
+                <span class="level-badge">📊 Profit Margin 18%</span>
+                <span class="level-badge">👥 @Model.TotalEmployees Employees</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        window.dashboardData = {
+            salesChart: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.MonthlySalesChart)),
+            productionChart: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.MonthlyProductionChart))
+        };
+    </script>
+}

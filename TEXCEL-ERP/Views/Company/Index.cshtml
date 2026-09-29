@@ -1,0 +1,389 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.CompanyViewModel
+@{
+    ViewBag.Title = "Company Information";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+            .page-header h1 {
+                font-size: 28px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: var(--text-primary);
+            }
+
+                .page-header h1 i {
+                    color: var(--gold);
+                    margin-right: 10px;
+                }
+
+        /* ============================================= */
+        /* COMPANY FORM CARD                              */
+        /* ============================================= */
+        .company-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px 36px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(108, 60, 176, 0.08);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .form-section-title i {
+                color: var(--gold);
+            }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+
+            .form-group label {
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+                .form-group label i {
+                    color: var(--primary-light);
+                    font-size: 12px;
+                }
+
+                .form-group label .required {
+                    color: #ef4444;
+                }
+
+            .form-group input,
+            .form-group textarea {
+                padding: 12px 16px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 14px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                transition: all 0.3s;
+                width: 100%;
+            }
+
+                .form-group input:focus,
+                .form-group textarea:focus {
+                    border-color: var(--primary-light);
+                    box-shadow: 0 0 0 4px rgba(108, 60, 176, 0.08);
+                    background: var(--bg-card);
+                }
+
+            .form-group textarea {
+                resize: vertical;
+                min-height: 80px;
+            }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--bg-body);
+            border-radius: 10px;
+            border: 1.5px solid var(--border-color);
+        }
+
+            .form-check input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                accent-color: var(--primary-light);
+                cursor: pointer;
+            }
+
+            .form-check label {
+                margin: 0;
+                cursor: pointer;
+                text-transform: none;
+                letter-spacing: 0;
+                font-size: 13px;
+                font-weight: 500;
+            }
+
+        /* ============================================= */
+        /* ALERTS                                         */
+        /* ============================================= */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.10);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        /* ============================================= */
+        /* FORM ACTIONS                                   */
+        /* ============================================= */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-save {
+            padding: 12px 28px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(108, 60, 176, 0.30);
+            transition: all 0.3s;
+        }
+
+            .btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(108, 60, 176, 0.45);
+            }
+
+        .btn-reset {
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+            .btn-reset:hover {
+                background: var(--bg-body);
+                border-color: var(--primary-light);
+                color: var(--primary-light);
+                text-decoration: none;
+            }
+
+        /* ============================================= */
+        /* RESPONSIVE                                     */
+        /* ============================================= */
+        @@media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .company-card {
+                padding: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .btn-save,
+            .btn-reset {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-briefcase"></i> Company Information</h1>
+</div>
+
+<div class="company-card">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            @Html.ValidationSummary(true, "")
+        </div>
+    }
+
+    @using (Html.BeginForm("Index", "Company", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.CompanyId)
+
+        <!-- SECTION 1: Basic Info -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-info-circle"></i> Basic Information
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label><i class="fas fa-building"></i> Company Name <span class="required">*</span></label>
+                    @Html.TextBoxFor(m => m.CompanyName, new { @placeholder = "Enter company name", @required = "required" })
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-file-signature"></i> Legal Name</label>
+                    @Html.TextBoxFor(m => m.LegalName, new { @placeholder = "e.g., TEXCEL ERP (Pvt) Ltd" })
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-globe"></i> Website</label>
+                    @Html.TextBoxFor(m => m.Website, new { @placeholder = "www.example.com" })
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Tax Info -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-file-invoice-dollar"></i> Tax Information
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-hashtag"></i> NTN</label>
+                    @Html.TextBoxFor(m => m.NTN, new { @placeholder = "1234567-8" })
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-receipt"></i> GST Number</label>
+                    @Html.TextBoxFor(m => m.GSTNumber, new { @placeholder = "GST-12345" })
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Contact Info -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-address-card"></i> Contact Information
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> Phone</label>
+                    @Html.TextBoxFor(m => m.Phone, new { @placeholder = "+92-42-1234567" })
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    @Html.TextBoxFor(m => m.Email, new { @placeholder = "info@company.com", @type = "email" })
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-city"></i> City</label>
+                    @Html.TextBoxFor(m => m.City, new { @placeholder = "e.g., Lahore" })
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-globe-asia"></i> Country</label>
+                    @Html.TextBoxFor(m => m.Country, new { @placeholder = "e.g., Pakistan" })
+                </div>
+
+                <div class="form-group full">
+                    <label><i class="fas fa-map-marker-alt"></i> Address</label>
+                    @Html.TextAreaFor(m => m.Address, new { @placeholder = "Complete address", @rows = 3 })
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Status -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-toggle-on"></i> Status
+            </div>
+
+            <div class="form-check">
+                @Html.CheckBoxFor(m => m.IsActive)
+                <label for="IsActive">Mark Company as Active</label>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="form-actions">
+            <a href="@Url.Action("Index", "Company")" class="btn-reset">
+                <i class="fas fa-redo"></i> Reset
+            </a>
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> Save Company Info
+            </button>
+        </div>
+    }
+</div>

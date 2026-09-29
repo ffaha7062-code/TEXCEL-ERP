@@ -1,0 +1,90 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.RegisterViewModel
+@{
+    ViewBag.Title = "Register";
+    Layout = "~/Views/Shared/_LayoutLogin.cshtml";
+}
+
+<div class="auth-card">
+    <div class="auth-brand">
+        <div class="logo-icon"><i class="fas fa-tshirt"></i></div>
+        <h1>TEXCEL <span>ERP</span></h1>
+        <span class="tagline">Textile &amp; Garment ERP</span>
+    </div>
+
+    @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @id = "registerForm" }))
+    {
+        @Html.AntiForgeryToken()
+
+        if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>@Html.ValidationSummary(true, "")</div>
+            </div>
+        }
+
+        <div class="form-group">
+            <label for="FirstName"><i class="fas fa-user"></i> First Name</label>
+            <div class="input-wrapper">
+                @Html.TextBoxFor(m => m.FirstName, new { @placeholder = "First Name" })
+                <i class="fas fa-user input-icon"></i>
+            </div>
+            @Html.ValidationMessageFor(m => m.FirstName)
+        </div>
+
+        <div class="form-group">
+            <label for="LastName"><i class="fas fa-user"></i> Last Name</label>
+            <div class="input-wrapper">
+                @Html.TextBoxFor(m => m.LastName, new { @placeholder = "Last Name" })
+                <i class="fas fa-user input-icon"></i>
+            </div>
+            @Html.ValidationMessageFor(m => m.LastName)
+        </div>
+
+        <div class="form-group">
+            <label for="Email"><i class="fas fa-envelope"></i> Email Address</label>
+            <div class="input-wrapper">
+                @Html.TextBoxFor(m => m.Email, new { @placeholder = "you@example.com", @type = "email" })
+                <i class="fas fa-envelope input-icon"></i>
+            </div>
+            @Html.ValidationMessageFor(m => m.Email)
+        </div>
+
+        <div class="form-group">
+            <label for="Password"><i class="fas fa-lock"></i> Password</label>
+            <div class="input-wrapper">
+                @Html.PasswordFor(m => m.Password, new { @placeholder = "Min 6 characters", @id = "regPassword" })
+                <i class="fas fa-lock input-icon"></i>
+                <button type="button" class="toggle-password" data-target="regPassword">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            @Html.ValidationMessageFor(m => m.Password)
+        </div>
+
+        <div class="form-group">
+            <label for="ConfirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
+            <div class="input-wrapper">
+                @Html.PasswordFor(m => m.ConfirmPassword, new { @placeholder = "Confirm password", @id = "regConfirmPassword" })
+                <i class="fas fa-lock input-icon"></i>
+                <button type="button" class="toggle-password" data-target="regConfirmPassword">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            @Html.ValidationMessageFor(m => m.ConfirmPassword)
+        </div>
+
+        <button type="submit" class="btn-gold">
+            <i class="fas fa-user-plus"></i>
+            <span>Create Account</span>
+        </button>
+    }
+
+    <div class="auth-footer">
+        Already have an account? <a href="@Url.Action("Login", "Account")">Sign In</a>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/account.js"></script>
+}

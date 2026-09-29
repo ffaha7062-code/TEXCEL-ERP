@@ -1,0 +1,253 @@
+﻿@model TEXCEL_ERP.Models.Entities.Department
+@{
+    ViewBag.Title = "Edit Department";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var branches = ViewBag.Branches as List<TEXCEL_ERP.Models.Entities.Branch>;
+}
+
+@section styles {
+    <style>
+        /* Same CSS as Create — copy from Create.cshtml */
+        .form-page {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+            .form-header h1 {
+                font-size: 26px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+            }
+
+                .form-header h1 i {
+                    color: var(--gold);
+                    margin-right: 8px;
+                }
+
+        .btn-back {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+            .btn-back:hover {
+                color: var(--primary-light);
+                border-color: var(--primary-light);
+            }
+
+        .form-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px 32px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(108, 60, 176, 0.08);
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .form-section-title i {
+                color: var(--gold);
+            }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+
+            .form-group label {
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
+
+                .form-group label .required {
+                    color: #ef4444;
+                }
+
+            .form-group input, .form-group select, .form-group textarea {
+                padding: 12px 14px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 14px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                transition: all 0.3s;
+                width: 100%;
+            }
+
+                .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+                    border-color: #8b5cf6;
+                    box-shadow: 0 0 0 4px rgba(108, 60, 176, 0.08);
+                }
+
+            .form-group textarea {
+                resize: vertical;
+                min-height: 80px;
+            }
+
+        .field-error {
+            color: #ef4444;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-save {
+            padding: 12px 28px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(108, 60, 176, 0.30);
+        }
+
+        .btn-cancel {
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .btn-cancel:hover {
+                color: var(--primary-light);
+                border-color: var(--primary-light);
+            }
+
+        @@media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+        }
+    </style>
+}
+
+<div class="form-page">
+    <div class="form-header">
+        <a href="@Url.Action("Index", "Department")" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1><i class="fas fa-edit"></i> Edit Department</h1>
+    </div>
+
+    <div class="form-card">
+        @using (Html.BeginForm("Edit", "Department", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.DepartmentId)
+            @Html.HiddenFor(m => m.CreatedDate)
+
+            <div class="form-section-title">
+                <i class="fas fa-sitemap"></i> Department Information
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Department Code <span class="required">*</span></label>
+                    @Html.TextBoxFor(m => m.DepartmentCode, new { @required = "required" })
+                    @Html.ValidationMessageFor(m => m.DepartmentCode, "", new { @class = "field-error" })
+                </div>
+
+                <div class="form-group">
+                    <label>Department Name <span class="required">*</span></label>
+                    @Html.TextBoxFor(m => m.DepartmentName, new { @required = "required" })
+                    @Html.ValidationMessageFor(m => m.DepartmentName, "", new { @class = "field-error" })
+                </div>
+
+                <div class="form-group full">
+                    <label>Branch <span class="required">*</span></label>
+                    @Html.DropDownListFor(m => m.BranchId,
+                        new SelectList(branches ?? new List<TEXCEL_ERP.Models.Entities.Branch>(), "BranchId", "BranchName", Model.BranchId),
+                        "-- Select Branch --", new { @required = "required" })
+                </div>
+
+                <div class="form-group full">
+                    <label>Description</label>
+                    @Html.TextAreaFor(m => m.Description, new { @rows = 3 })
+                </div>
+
+                <div class="form-group full">
+                    <label style="flex-direction:row; display:flex; align-items:center; gap:8px; text-transform:none;">
+                        @Html.CheckBoxFor(m => m.IsActive)
+                        <span>Mark as Active</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="@Url.Action("Index", "Department")" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Update Department
+                </button>
+            </div>
+        }
+    </div>
+</div>

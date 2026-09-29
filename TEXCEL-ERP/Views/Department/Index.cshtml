@@ -1,0 +1,557 @@
+﻿@model List<TEXCEL_ERP.Models.Entities.Department>
+@{
+    ViewBag.Title = "Departments";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var branches = ViewBag.Branches as List<TEXCEL_ERP.Models.Entities.Branch>;
+}
+
+@section styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+            .page-header h1 {
+                font-size: 28px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: var(--text-primary);
+            }
+
+                .page-header h1 i {
+                    color: var(--gold);
+                    margin-right: 10px;
+                }
+
+        .btn-add {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(108, 60, 176, 0.30);
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+            .btn-add:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(108, 60, 176, 0.45);
+            }
+
+        /* Filter */
+        .user-filter-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px 28px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: 1fr 220px auto;
+            gap: 20px;
+            align-items: end;
+        }
+
+            .user-filter-card form {
+                display: contents;
+            }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+            .filter-group label {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+                .filter-group label i {
+                    color: var(--primary-light);
+                }
+
+            .filter-group input[type="text"],
+            .filter-group select {
+                padding: 12px 16px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+            }
+
+                .filter-group input[type="text"]:focus,
+                .filter-group select:focus {
+                    border-color: var(--primary-light);
+                    box-shadow: 0 0 0 4px rgba(108, 60, 176, 0.08);
+                }
+
+        .filter-actions {
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        .btn-filter-primary {
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-filter-reset {
+            padding: 12px 20px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+            .btn-filter-reset:hover {
+                background: var(--bg-body);
+                border-color: var(--primary-light);
+                color: var(--primary-light);
+                text-decoration: none;
+            }
+
+        /* Table */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+            .table-card table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .table-card thead {
+                background: rgba(108, 60, 176, 0.05);
+            }
+
+            .table-card th {
+                padding: 14px 18px;
+                text-align: left;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .table-card td {
+                padding: 14px 18px;
+                font-size: 13px;
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .table-card tr:last-child td {
+                border-bottom: none;
+            }
+
+            .table-card tbody tr:hover {
+                background: rgba(108, 60, 176, 0.03);
+            }
+
+        .badge-active {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .badge-inactive {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-body);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+        }
+
+            .action-btn:hover {
+                background: rgba(108, 60, 176, 0.10);
+                color: #8b5cf6;
+                border-color: #8b5cf6;
+            }
+
+            .action-btn.delete:hover {
+                background: rgba(239, 68, 68, 0.10);
+                color: #ef4444;
+                border-color: #ef4444;
+            }
+
+        /* Modal */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 20, 0.75);
+            z-index: 2147483647;
+            padding: 90px 16px 20px 16px;
+            overflow-y: auto;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+            .modal-bg.show {
+                display: flex !important;
+            }
+
+        .modal-box {
+            background: #ffffff;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 580px;
+            max-height: calc(100vh - 180px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.40);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .modal-box {
+            background: #1a1a2e;
+        }
+
+        .modal-top {
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+            .modal-top h3 {
+                margin: 0;
+                font-size: 15px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .modal-top h3 i {
+                    color: #fbbf24;
+                }
+
+            .modal-top button {
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                width: 28px;
+                height: 28px;
+                border-radius: 7px;
+                cursor: pointer;
+            }
+
+        .modal-form {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+            .form-row.full {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row label {
+                display: block;
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                margin-bottom: 4px;
+                text-transform: uppercase;
+            }
+
+            .form-row input, .form-row select, .form-row textarea {
+                width: 100%;
+                padding: 8px 11px;
+                border-radius: 8px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+            }
+
+                .form-row input:focus, .form-row select:focus {
+                    border-color: #8b5cf6;
+                    box-shadow: 0 0 0 2px rgba(108, 60, 176, 0.10);
+                }
+
+        .modal-actions {
+            padding: 12px 20px;
+            background: rgba(240, 242, 245, 0.7);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .btn-cancel {
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @@media (max-width: 900px) {
+            .user-filter-card {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                flex-direction: column;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-sitemap"></i> Departments</h1>
+    <button type="button" class="btn-add" id="openModalBtn">
+        <i class="fas fa-plus"></i> Add New Department
+    </button>
+</div>
+
+<!-- FILTER -->
+<div class="user-filter-card">
+    @using (Html.BeginForm("Index", "Department", FormMethod.Get))
+    {
+        <div class="filter-group">
+            <label><i class="fas fa-search"></i> Search</label>
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search by code or name..." />
+        </div>
+
+        <div class="filter-group">
+            <label><i class="fas fa-toggle-on"></i> Status</label>
+            <select name="isActive">
+                <option value="">All Status</option>
+                <option value="true" @(ViewBag.IsActive == true ? "selected" : "")>Active Only</option>
+                <option value="false" @(ViewBag.IsActive == false ? "selected" : "")>Inactive Only</option>
+            </select>
+        </div>
+
+        <div class="filter-group filter-actions">
+            <button type="submit" class="btn-filter-primary">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+            <a href="@Url.Action("Index", "Department")" class="btn-filter-reset">
+                <i class="fas fa-redo"></i> Reset
+            </a>
+        </div>
+    }
+</div>
+
+<!-- TABLE -->
+<div class="table-card">
+    @if (Model != null && Model.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Department Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model)
+                {
+                    <tr>
+                        <td><strong>@d.DepartmentCode</strong></td>
+                        <td>@d.DepartmentName</td>
+                        <td>@(d.Description ?? "-")</td>
+                        <td>
+                            @if (d.IsActive)
+                            {
+                                <span class="badge-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td style="text-align:right;">
+                            <button type="button" class="action-btn edit-btn"
+                                    data-id="@d.DepartmentId"
+                                    data-code="@d.DepartmentCode"
+                                    data-name="@d.DepartmentName"
+                                    data-desc="@d.Description"
+                                    data-branch="@d.BranchId"
+                                    title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="action-btn toggle-btn" data-id="@d.DepartmentId" title="Toggle Status">
+                                <i class="fas fa-power-off"></i>
+                            </button>
+                            <button type="button" class="action-btn delete delete-btn" data-id="@d.DepartmentId" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+            <i class="fas fa-sitemap" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px;"></i>
+            <h3>No Departments Found</h3>
+            <p>Click "Add New Department" to create one.</p>
+        </div>
+    }
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="departmentModal">
+    <div class="modal-box">
+        <div class="modal-top">
+            <h3 id="modalTitle"><i class="fas fa-sitemap"></i> Add New Department</h3>
+            <button type="button" id="closeModalBtn"><i class="fas fa-times"></i></button>
+        </div>
+
+        @using (Html.BeginForm("Create", "Department", FormMethod.Post, new { @id = "deptForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="DepartmentId" id="DepartmentId" value="0" />
+
+            <div class="modal-form">
+                <div class="form-row full">
+                    <div>
+                        <label>Branch *</label>
+                        <select name="BranchId" id="BranchId" required>
+                            <option value="">-- Select Branch --</option>
+                            @if (branches != null)
+                            {
+                                foreach (var b in branches)
+                                {
+                                    <option value="@b.BranchId">@b.BranchName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div>
+                        <label>Department Code *</label>
+                        <input type="text" name="DepartmentCode" id="DepartmentCode" placeholder="CUT-01" required />
+                    </div>
+                    <div>
+                        <label>Department Name *</label>
+                        <input type="text" name="DepartmentName" id="DepartmentName" placeholder="Cutting" required />
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div>
+                        <label>Description</label>
+                        <textarea name="Description" id="Description" rows="2" placeholder="Enter description"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> <span id="submitBtnText">Create Department</span>
+                </button>
+            </div>
+        }
+    </div>
+</div>
+@section scripts {
+    <script src="~/Scripts/department.js"></script>
+}

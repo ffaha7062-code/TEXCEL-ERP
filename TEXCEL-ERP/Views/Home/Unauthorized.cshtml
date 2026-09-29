@@ -1,0 +1,13 @@
+﻿@{
+    ViewBag.Title = "Unauthorized";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="text-align:center; padding:60px 20px;">
+    <i class="fas fa-lock" style="font-size:60px; color:#f59e0b; margin-bottom:20px;"></i>
+    <h1 style="font-size:32px; font-weight:800; margin-bottom:12px;">Access Denied</h1>
+    <p style="color:#6b7280; margin-bottom:24px;">You don't have permission to access this page.</p>
+    <a href="@Url.Action("Index", "Home")" style="padding:12px 28px; background:linear-gradient(135deg,#6c3cb0,#8b5cf6); color:white; text-decoration:none; border-radius:10px; font-weight:600;">
+        Go to Dashboard
+    </a>
+</div>
