@@ -6,6 +6,7 @@ namespace TEXCEL_ERP.Filters
 {
     /// <summary>
     /// Role-based authorization filter.
+    /// Usage: [RoleAuthorize("SuperAdmin", "Manager")]
     /// </summary>
     public class RoleAuthorizeAttribute : ActionFilterAttribute
     {
@@ -18,14 +19,25 @@ namespace TEXCEL_ERP.Filters
 
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
-            if (!SessionHelper.UserId.HasValue)
+            // Check authentication
+            if (!SessionHelper.IsAuthenticated)
             {
-                filterContext.Result = new RedirectResult("~/Account/Login");
+                var returnUrl = filterContext.HttpContext.Request.RawUrl;
+                filterContext.Result = new RedirectResult(
+                    $"~/Account/Login?returnUrl={System.Web.HttpUtility.UrlEncode(returnUrl)}");
                 return;
             }
 
+            // SuperAdmin always allowed
+            if (SessionHelper.IsSuperAdmin)
+            {
+                base.OnActionExecuting(filterContext);
+                return;
+            }
+
+            // Check role
             var currentRole = SessionHelper.Role;
-            if (Array.IndexOf(_allowedRoles, currentRole) < 0 && currentRole != "SuperAdmin")
+            if (Array.IndexOf(_allowedRoles, currentRole) < 0)
             {
                 filterContext.Result = new RedirectResult("~/Home/Unauthorized");
                 return;

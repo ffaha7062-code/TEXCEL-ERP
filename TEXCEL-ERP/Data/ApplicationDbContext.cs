@@ -25,6 +25,8 @@ namespace TEXCEL_ERP.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Shift> Shifts { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
+
+        public DbSet<Holiday> Holidays { get; set; }
         public DbSet<Leave> Leaves { get; set; }
         public DbSet<LeavePolicy> LeavePolicies { get; set; }
         public DbSet<SalaryHead> SalaryHeads { get; set; }
@@ -32,6 +34,10 @@ namespace TEXCEL_ERP.Data
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<PayrollDetail> PayrollDetails { get; set; }
         public DbSet<Loan> Loans { get; set; }
+
+        public DbSet<Advance> Advances { get; set; }
+        public DbSet<AdvanceRecovery> AdvanceRecoveries { get; set; }
+        public DbSet<TaxSlab> TaxSlabs { get; set; }
         public DbSet<LoanInstallment> LoanInstallments { get; set; }
         public DbSet<Fabric> Fabrics { get; set; }
         public DbSet<FabricBatch> FabricBatches { get; set; }
@@ -95,6 +101,7 @@ namespace TEXCEL_ERP.Data
             modelBuilder.Entity<Invoice>().Property(i => i.PaidAmount).HasPrecision(18, 2);
             modelBuilder.Entity<SalesOrder>().Property(s => s.TotalAmount).HasPrecision(18, 2);
             modelBuilder.Entity<SalesOrder>().Property(s => s.SubTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<Shift>().Property(s => s.OvertimeRate).HasPrecision(18, 2);
             modelBuilder.Entity<PurchaseOrder>().Property(p => p.TotalAmount).HasPrecision(18, 2);
             modelBuilder.Entity<PurchaseOrder>().Property(p => p.SubTotal).HasPrecision(18, 2);
             modelBuilder.Entity<GRN>().Property(g => g.Quantity).HasPrecision(18, 3);
@@ -113,6 +120,9 @@ namespace TEXCEL_ERP.Data
             modelBuilder.Entity<LoanInstallment>().Property(l => l.PrincipalAmount).HasPrecision(18, 2);
             modelBuilder.Entity<LoanInstallment>().Property(l => l.InterestAmount).HasPrecision(18, 2);
             modelBuilder.Entity<LoanInstallment>().Property(l => l.PaidAmount).HasPrecision(18, 2);
+        
+            modelBuilder.Entity<Employee>().Property(e => e.PieceRate).HasPrecision(18, 2);
+
 
             // =============================================
             // UNIQUE CONSTRAINTS
@@ -139,9 +149,9 @@ namespace TEXCEL_ERP.Data
             // COMPANY → EMPLOYEE
             // =============================================
             modelBuilder.Entity<Employee>()
-                .HasRequired(e => e.Company)
-                .WithMany(c => c.Employees)
-                .HasForeignKey(e => e.CompanyId)
+                .HasOptional(e => e.ReportingManager)
+                .WithMany()
+                .HasForeignKey(e => e.ReportingManagerId)
                 .WillCascadeOnDelete(false);
 
             // =============================================

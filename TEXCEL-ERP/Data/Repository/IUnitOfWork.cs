@@ -15,6 +15,8 @@ namespace TEXCEL_ERP.Data.Repository
         IRepository<Employee> Employees { get; }
         IRepository<Shift> Shifts { get; }
         IRepository<Attendance> Attendances { get; }
+
+        IRepository<Holiday> Holidays { get; }
         IRepository<Leave> Leaves { get; }
         IRepository<LeavePolicy> LeavePolicies { get; }
         IRepository<SalaryHead> SalaryHeads { get; }

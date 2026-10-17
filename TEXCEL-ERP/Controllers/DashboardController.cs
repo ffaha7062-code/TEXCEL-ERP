@@ -1,23 +1,28 @@
-﻿using System.Web.Mvc;
+﻿using System;
+using System.Web.Mvc;
+using TEXCEL_ERP.Data;
+using TEXCEL_ERP.Data.Repository;
 using TEXCEL_ERP.Filters;
-using TEXCEL_ERP.Services;
 using TEXCEL_ERP.Helpers;
-using Microsoft.AspNet.Identity;
+using TEXCEL_ERP.Services;
 
 namespace TEXCEL_ERP.Controllers
 {
     /// <summary>
-    /// Dashboard controller for the application.
+    /// Dashboard controller.
+    /// SuperAdmin = all branches data
+    /// BranchAdmin/Manager/Employee = own branch data
     /// </summary>
-    [SessionTimeout]
-    public class DashboardController : Controller
+    [RoleAuthorize("SuperAdmin", "BranchAdmin", "Manager", "Employee")]
+    [BranchAuthorize]
+    public class DashboardController : BaseController
     {
         private readonly IDashboardService _dashboardService;
 
         public DashboardController()
         {
-            var context = new Data.ApplicationDbContext();
-            var unitOfWork = new Data.Repository.UnitOfWork(context);
+            var context = new ApplicationDbContext();
+            var unitOfWork = new UnitOfWork(context);
             _dashboardService = new DashboardService(unitOfWork);
         }
 
@@ -26,28 +31,58 @@ namespace TEXCEL_ERP.Controllers
             _dashboardService = dashboardService;
         }
 
+        // =============================================
+        // INDEX — Dashboard
+        // =============================================
         // GET: /Dashboard/Index
         public ActionResult Index()
         {
-            var model = _dashboardService.GetDashboardData();
-            model.UserName = User.Identity.GetUserName() ?? "User";
-            model.Role = SessionHelper.Role ?? "User";
-            model.BranchName = SessionHelper.BranchName ?? "Head Office";
+            // ✅ Role-based data fetch
+            var model = GetRoleBasedDashboardData();
+
+            // ✅ User info from SessionHelper (consistent)
+            model.UserName = CurrentFullName;
+            model.Role = CurrentRole;
+            model.BranchName = IsSuperAdmin ? "All Branches" : CurrentBranchName;
 
             return View(model);
         }
 
-        // GET: /Dashboard/GetChartData (AJAX)
+        // =============================================
+        // GET CHART DATA — AJAX
+        // =============================================
         [HttpGet]
         public JsonResult GetChartData()
         {
-            var model = _dashboardService.GetDashboardData();
+            var model = GetRoleBasedDashboardData();
+
             return Json(new
             {
                 sales = model.MonthlySalesChart,
                 production = model.MonthlyProductionChart,
                 purchase = model.MonthlyPurchaseChart
             }, JsonRequestBehavior.AllowGet);
+        }
+
+        // =============================================
+        // HELPER — Role-based data fetch
+        // =============================================
+        private Models.ViewModels.DashboardViewModel GetRoleBasedDashboardData()
+        {
+            // SuperAdmin = all branches
+            if (IsSuperAdmin)
+            {
+                return _dashboardService.GetDashboardData();
+            }
+
+            // BranchAdmin/Manager/Employee = own branch
+            if (CurrentBranchId.HasValue)
+            {
+                return _dashboardService.GetBranchDashboardData(CurrentBranchId.Value);
+            }
+
+            // Fallback: no branch — return all data
+            return _dashboardService.GetDashboardData();
         }
     }
 }

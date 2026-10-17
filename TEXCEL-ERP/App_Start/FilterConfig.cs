@@ -9,6 +9,7 @@ namespace TEXCEL_ERP
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new ExceptionLogAttribute());
+            //filters.Add(new SessionTimeoutAttribute());
         }
     }
 }

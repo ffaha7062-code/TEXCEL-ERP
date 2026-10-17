@@ -1,0 +1,1022 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.LateOTReportViewModel
+@{
+    ViewBag.Title = "Late & OT Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var isSuperAdmin = ViewBag.IsSuperAdmin != null && (bool)ViewBag.IsSuperAdmin;
+    var selectedBranchId = ViewBag.SelectedBranchId as int?;
+    var selectedDepartmentId = ViewBag.SelectedDepartmentId as int?;
+}
+
+@section styles {
+    <style>
+        /* ============================================= */
+        /* LATE & OT REPORT — AMBER THEME                */
+        /* ============================================= */
+
+        /* PAGE HEADER */
+        .page-header-lateot {
+            background: linear-gradient(135deg, #b45309, #d97706);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(180, 83, 9, 0.30);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .page-header-lateot .header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.20);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .page-header-lateot h1 {
+                font-size: 20px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: white;
+            }
+
+            .page-header-lateot p {
+                font-size: 12px;
+                margin: 4px 0 0 0;
+                color: rgba(255, 255, 255, 0.85);
+            }
+
+        /* Back Button */
+        .page-back-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+            .page-back-btn:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.60);
+                color: white;
+                text-decoration: none;
+                transform: translateX(-4px);
+            }
+
+        /* ============================================= */
+        /* FILTER BAR                                     */
+        /* ============================================= */
+        .filter-bar {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 16px rgba(180, 83, 9, 0.05);
+        }
+
+            .filter-bar .filter-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text-primary);
+                padding-right: 14px;
+                border-right: 1px solid var(--border-color);
+                margin-right: 4px;
+            }
+
+                .filter-bar .filter-title i {
+                    color: #b45309;
+                }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .filter-group label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                white-space: nowrap;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                padding: 9px 14px;
+                border-radius: 8px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                font-weight: 600;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                transition: all 0.3s;
+                min-width: 140px;
+            }
+
+                .filter-group input:focus,
+                .filter-group select:focus {
+                    border-color: #b45309;
+                    box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.10);
+                }
+
+        .btn-generate {
+            padding: 9px 20px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #b45309, #d97706);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(180, 83, 9, 0.30);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+            .btn-generate:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 16px rgba(180, 83, 9, 0.40);
+            }
+
+        /* ============================================= */
+        /* KPI CARDS                                      */
+        /* ============================================= */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px 16px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .kpi-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+            }
+
+            .kpi-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+            }
+
+            .kpi-card .kpi-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .kpi-card .kpi-value {
+                font-size: 22px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                line-height: 1;
+                margin-bottom: 6px;
+            }
+
+            .kpi-card .kpi-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+            }
+
+        /* Amber primary */
+        .kpi-late::before {
+            background: #b45309;
+        }
+
+        .kpi-late .kpi-icon {
+            background: rgba(180, 83, 9, 0.12);
+            color: #b45309;
+        }
+
+        .kpi-late .kpi-value {
+            color: #b45309;
+        }
+
+        .kpi-latemin::before {
+            background: #ef4444;
+        }
+
+        .kpi-latemin .kpi-icon {
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+        .kpi-latemin .kpi-value {
+            color: #ef4444;
+        }
+
+        .kpi-ot::before {
+            background: #10b981;
+        }
+
+        .kpi-ot .kpi-icon {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .kpi-ot .kpi-value {
+            color: #10b981;
+        }
+
+        .kpi-empot::before {
+            background: #3b82f6;
+        }
+
+        .kpi-empot .kpi-icon {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+        }
+
+        .kpi-empot .kpi-value {
+            color: #3b82f6;
+        }
+
+        .kpi-emplate::before {
+            background: #f59e0b;
+        }
+
+        .kpi-emplate .kpi-icon {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+        }
+
+        .kpi-emplate .kpi-value {
+            color: #f59e0b;
+        }
+
+        .kpi-avg::before {
+            background: #d97706;
+        }
+
+        .kpi-avg .kpi-icon {
+            background: rgba(217, 119, 6, 0.12);
+            color: #d97706;
+        }
+
+        .kpi-avg .kpi-value {
+            color: #d97706;
+        }
+
+        /* ============================================= */
+        /* CHARTS                                         */
+        /* ============================================= */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 16px rgba(180, 83, 9, 0.05);
+        }
+
+            .chart-card h3 {
+                font-size: 14px;
+                font-weight: 700;
+                font-family: 'Space Grotesk', sans-serif;
+                color: var(--text-primary);
+                margin: 0 0 16px 0;
+                padding-bottom: 12px;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .chart-card h3 i {
+                    color: #b45309;
+                }
+
+            .chart-card .chart-container {
+                position: relative;
+                height: 280px;
+            }
+
+        /* ============================================= */
+        /* TABBED TABLE                                   */
+        /* ============================================= */
+        .tabs-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(180, 83, 9, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(180, 83, 9, 0.03);
+            padding: 0 4px;
+        }
+
+            .tabs-header .tab-btn {
+                padding: 14px 24px;
+                font-size: 13px;
+                font-weight: 700;
+                font-family: 'Inter', sans-serif;
+                color: var(--text-secondary);
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                border-bottom: 3px solid transparent;
+                transition: all 0.3s;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .tabs-header .tab-btn:hover {
+                    color: #b45309;
+                    background: rgba(180, 83, 9, 0.04);
+                }
+
+                .tabs-header .tab-btn.active {
+                    color: #b45309;
+                    border-bottom-color: #b45309;
+                    background: rgba(180, 83, 9, 0.06);
+                }
+
+        .tab-content {
+            display: none;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        .table-header {
+            padding: 14px 24px;
+            background: rgba(180, 83, 9, 0.04);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+            .table-header h3 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 700;
+                font-family: 'Space Grotesk', sans-serif;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .table-header h3 i {
+                    color: #b45309;
+                }
+
+            .table-header .record-count {
+                font-size: 12px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .data-table thead {
+                background: rgba(180, 83, 9, 0.03);
+            }
+
+            .data-table th {
+                padding: 12px 16px;
+                text-align: left;
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid var(--border-color);
+                white-space: nowrap;
+            }
+
+            .data-table td {
+                padding: 12px 16px;
+                font-size: 13px;
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .data-table tbody tr:hover {
+                background: rgba(180, 83, 9, 0.03);
+            }
+
+            .data-table tr:last-child td {
+                border-bottom: none;
+            }
+
+        .emp-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .emp-mini .emp-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #b45309, #d97706);
+                color: white;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 12px;
+                flex-shrink: 0;
+            }
+
+            .emp-mini .emp-name {
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--text-primary);
+                display: block;
+            }
+
+            .emp-mini .emp-code {
+                font-size: 10px;
+                color: var(--text-muted);
+                display: block;
+            }
+
+        /* Late minutes badge */
+        .badge-late {
+            background: rgba(180, 83, 9, 0.12);
+            color: #b45309;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+            .badge-late.severe {
+                background: rgba(239, 68, 68, 0.12);
+                color: #ef4444;
+            }
+
+        .badge-ot {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .text-amount {
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        /* ============================================= */
+        /* EXPORT BAR                                     */
+        /* ============================================= */
+        .export-bar {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px 24px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+            .export-bar .export-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text-primary);
+            }
+
+                .export-bar .export-title i {
+                    color: #b45309;
+                }
+
+            .export-bar .export-buttons {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+        .btn-export {
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            border: none;
+            text-decoration: none;
+        }
+
+            .btn-export:hover {
+                transform: translateY(-1px);
+            }
+
+        .btn-print {
+            background: rgba(107, 114, 128, 0.12);
+            color: #4b5563;
+        }
+
+            .btn-print:hover {
+                background: rgba(107, 114, 128, 0.20);
+            }
+
+        .btn-pdf {
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+            .btn-pdf:hover {
+                background: rgba(239, 68, 68, 0.18);
+            }
+
+        .btn-excel {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+            .btn-excel:hover {
+                background: rgba(16, 185, 129, 0.20);
+            }
+
+        .btn-csv {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+        }
+
+            .btn-csv:hover {
+                background: rgba(59, 130, 246, 0.20);
+            }
+
+        /* ============================================= */
+        /* RESPONSIVE                                     */
+        /* ============================================= */
+        @@media (max-width: 1200px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 700px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+                .filter-bar .filter-title {
+                    border-right: none;
+                    border-bottom: 1px solid var(--border-color);
+                    padding-right: 0;
+                    padding-bottom: 10px;
+                    margin-right: 0;
+                }
+
+            .filter-group {
+                justify-content: space-between;
+            }
+
+                .filter-group input,
+                .filter-group select {
+                    flex: 1;
+                }
+        }
+
+        /* Print */
+        @@media print {
+            .page-header-lateot,
+            .filter-bar,
+            .export-bar,
+            .page-back-btn,
+            .top-navbar,
+            .footer,
+            .report-subnav,
+            .tabs-header {
+                display: none !important;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+            .tab-content {
+                display: block !important;
+            }
+
+            body {
+                background: white !important;
+            }
+        }
+    </style>
+}
+
+<!-- ============================================= -->
+<!-- SUB-NAV                                        -->
+<!-- ============================================= -->
+@Html.Partial("_ReportNav")
+
+<!-- ============================================= -->
+<!-- COMPACT HEADER                                 -->
+<!-- ============================================= -->
+<div class="page-header-lateot">
+    <a href="@Url.Action("Index", "AttendanceReport")" class="page-back-btn" title="Back to Reports">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div class="header-icon">
+        <i class="fas fa-clock"></i>
+    </div>
+    <div>
+        <h1>Late &amp; Overtime Report</h1>
+        <p>
+            @Model.FromDate.ToString("dd MMM yyyy")
+            <span> — </span>
+            <span>@Model.ToDate.ToString("dd MMM yyyy")</span>
+            <span> • </span>
+            <span>@Model.BranchName</span>
+            @if (!string.IsNullOrEmpty(Model.DepartmentName))
+            {
+                <span> • </span>
+                <span>@Model.DepartmentName</span>
+            }
+        </p>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- FILTER BAR                                     -->
+<!-- ============================================= -->
+<div class="filter-bar">
+    <div class="filter-title">
+        <i class="fas fa-filter"></i>
+        <span>Filter</span>
+    </div>
+
+    <form method="get" action="@Url.Action("LateOT", "AttendanceReport")" style="display: contents;">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" required />
+        </div>
+
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" name="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" required />
+        </div>
+
+        @if (isSuperAdmin)
+        {
+            <div class="filter-group">
+                <label>Branch</label>
+                <select name="branchId">
+                    <option value="">All Branches</option>
+                    @if (Model.Branches != null)
+                    {
+                        foreach (var b in Model.Branches)
+                        {
+                            <option value="@b.BranchId" @(selectedBranchId == b.BranchId ? "selected" : "")>@b.BranchName</option>
+                        }
+                    }
+                </select>
+            </div>
+        }
+
+        <div class="filter-group">
+            <label>Department</label>
+            <select name="departmentId">
+                <option value="">All Departments</option>
+                @if (Model.Departments != null)
+                {
+                    foreach (var d in Model.Departments)
+                    {
+                        <option value="@d.DepartmentId" @(selectedDepartmentId == d.DepartmentId ? "selected" : "")>@d.DepartmentName</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <button type="submit" class="btn-generate">
+            <i class="fas fa-sync-alt"></i> Generate Report
+        </button>
+    </form>
+</div>
+
+<!-- ============================================= -->
+<!-- KPI CARDS                                      -->
+<!-- ============================================= -->
+<div class="kpi-grid">
+    <div class="kpi-card kpi-late">
+        <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+        <div class="kpi-value">@Model.TotalLateInstances</div>
+        <div class="kpi-label">Late Instances</div>
+    </div>
+
+    <div class="kpi-card kpi-latemin">
+        <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="kpi-value">@Model.TotalLateMinutes</div>
+        <div class="kpi-label">Late Minutes</div>
+    </div>
+
+    <div class="kpi-card kpi-ot">
+        <div class="kpi-icon"><i class="fas fa-business-time"></i></div>
+        <div class="kpi-value">@Model.TotalOvertimeHours.ToString("0.0")</div>
+        <div class="kpi-label">OT Hours</div>
+    </div>
+
+    <div class="kpi-card kpi-empot">
+        <div class="kpi-icon"><i class="fas fa-users"></i></div>
+        <div class="kpi-value">@Model.EmployeesWithOT</div>
+        <div class="kpi-label">With OT</div>
+    </div>
+
+    <div class="kpi-card kpi-emplate">
+        <div class="kpi-icon"><i class="fas fa-user-clock"></i></div>
+        <div class="kpi-value">@Model.EmployeesWithLate</div>
+        <div class="kpi-label">With Late</div>
+    </div>
+
+    <div class="kpi-card kpi-avg">
+        <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="kpi-value">@Model.AverageOTPerEmployee.ToString("0.0")</div>
+        <div class="kpi-label">Avg OT/Employee</div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- CHARTS                                         -->
+<!-- ============================================= -->
+<div class="charts-grid">
+
+    <div class="chart-card">
+        <h3><i class="fas fa-chart-line"></i> Late Minutes Trend</h3>
+        <div class="chart-container">
+            <canvas id="lateTrendChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <h3><i class="fas fa-chart-line"></i> Overtime Hours Trend</h3>
+        <div class="chart-container">
+            <canvas id="otTrendChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================= -->
+<!-- TABBED TABLES                                  -->
+<!-- ============================================= -->
+<div class="tabs-card">
+
+    <!-- Tab Buttons -->
+    <div class="tabs-header">
+        <button type="button" class="tab-btn active" data-tab="late-tab">
+            <i class="fas fa-clock"></i> Late Records (@Model.LateRecords.Count)
+        </button>
+        <button type="button" class="tab-btn" data-tab="ot-tab">
+            <i class="fas fa-business-time"></i> Overtime Records (@Model.OTRecords.Count)
+        </button>
+    </div>
+
+    <!-- LATE TAB -->
+    <div class="tab-content active" id="late-tab">
+        @if (Model.LateRecords != null && Model.LateRecords.Any())
+        {
+            <div style="overflow-x: auto;">
+                <table class="data-table" id="lateTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Date</th>
+                            <th>Shift Start</th>
+                            <th>Check In</th>
+                            <th>Late Minutes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int lateNo = 1; }
+                        @foreach (var row in Model.LateRecords)
+                        {
+                            var initial = !string.IsNullOrEmpty(row.EmployeeName) ? row.EmployeeName.Substring(0, 1).ToUpper() : "E";
+                            var lateSeverity = row.LateMinutes > 60 ? "severe" : "";
+
+                            <tr>
+                                <td>@lateNo</td>
+                                <td>
+                                    <div class="emp-mini">
+                                        <span class="emp-avatar">@initial</span>
+                                        <div>
+                                            <span class="emp-name">@row.EmployeeName</span>
+                                            <span class="emp-code">@row.EmployeeCode</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@row.DepartmentName</td>
+                                <td>@row.AttendanceDate.ToString("dd MMM yyyy")</td>
+                                <td>@row.ShiftStart.ToString(@"hh\:mm")</td>
+                                <td>@(row.CheckIn.HasValue ? row.CheckIn.Value.ToString(@"hh\:mm") : "-")</td>
+                                <td><span class="badge-late @lateSeverity">@row.LateMinutes min</span></td>
+                            </tr>
+                            lateNo++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+                <i class="fas fa-check-circle" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px; color:#10b981;"></i>
+                <h3>No Late Records</h3>
+                <p>Selected period mein koi late nahi hua — <strong>Great!</strong></p>
+            </div>
+        }
+    </div>
+
+    <!-- OT TAB -->
+    <div class="tab-content" id="ot-tab">
+        @if (Model.OTRecords != null && Model.OTRecords.Any())
+        {
+            <div style="overflow-x: auto;">
+                <table class="data-table" id="otTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Date</th>
+                            <th>Shift End</th>
+                            <th>Check Out</th>
+                            <th>OT Hours</th>
+                            <th>OT Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int otNo = 1; }
+                        @foreach (var row in Model.OTRecords)
+                        {
+                            var initial = !string.IsNullOrEmpty(row.EmployeeName) ? row.EmployeeName.Substring(0, 1).ToUpper() : "E";
+
+                            <tr>
+                                <td>@otNo</td>
+                                <td>
+                                    <div class="emp-mini">
+                                        <span class="emp-avatar">@initial</span>
+                                        <div>
+                                            <span class="emp-name">@row.EmployeeName</span>
+                                            <span class="emp-code">@row.EmployeeCode</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@row.DepartmentName</td>
+                                <td>@row.AttendanceDate.ToString("dd MMM yyyy")</td>
+                                <td>@row.ShiftEnd.ToString(@"hh\:mm")</td>
+                                <td>@(row.CheckOut.HasValue ? row.CheckOut.Value.ToString(@"hh\:mm") : "-")</td>
+                                <td><span class="badge-ot">@row.OvertimeHours.ToString("0.00") h</span></td>
+                                <td class="text-amount">PKR @row.OvertimeAmount.ToString("N0")</td>
+                            </tr>
+                            otNo++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+                <i class="fas fa-business-time" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px;"></i>
+                <h3>No Overtime Records</h3>
+                <p>Selected period mein koi overtime nahi hua.</p>
+            </div>
+        }
+    </div>
+
+</div>
+
+<!-- ============================================= -->
+<!-- EXPORT BAR                                     -->
+<!-- ============================================= -->
+<div class="export-bar">
+    <div class="export-title">
+        <i class="fas fa-download"></i>
+        <span>Export Report</span>
+    </div>
+    <div class="export-buttons">
+        <button type="button" class="btn-export btn-print" onclick="window.print();">
+            <i class="fas fa-print"></i> Print
+        </button>
+        <button type="button" class="btn-export btn-pdf" id="btnExportPDF">
+            <i class="fas fa-file-pdf"></i> PDF
+        </button>
+        <button type="button" class="btn-export btn-excel" id="btnExportExcel">
+            <i class="fas fa-file-excel"></i> Excel
+        </button>
+        <button type="button" class="btn-export btn-csv" id="btnExportCSV">
+            <i class="fas fa-file-csv"></i> CSV
+        </button>
+    </div>
+</div>
+
+<!-- Hidden Data for Charts -->
+<script id="lateTrendChartData" type="application/json">
+    @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.LateTrendChart))
+</script>
+
+<script id="otTrendChartData" type="application/json">
+    @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.OTTrendChart))
+</script>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="~/Scripts/attendance-reports.js"></script>
+   
+    
+}

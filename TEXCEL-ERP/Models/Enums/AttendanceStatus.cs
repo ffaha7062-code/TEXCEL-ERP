@@ -27,7 +27,10 @@ namespace TEXCEL_ERP.Models.Enums
         WeekOff = 5,
 
         [Display(Name = "Holiday")]
-        Holiday = 6,
+        Holiday = 5,
+
+        [Display(Name = "Weekend")]
+        Weekend = 6,
 
         [Display(Name = "Late")]
         Late = 7,

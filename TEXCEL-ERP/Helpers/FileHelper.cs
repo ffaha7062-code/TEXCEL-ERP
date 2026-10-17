@@ -9,11 +9,15 @@ namespace TEXCEL_ERP.Helpers
     /// </summary>
     public static class FileHelper
     {
+        /// <summary>
+        /// Upload file to a specific folder.
+        /// </summary>
         public static string UploadFile(HttpPostedFileBase file, string folderPath, string prefix = "")
         {
             if (file == null || file.ContentLength == 0) return null;
 
-            var fileName = $"{prefix}_{DateTime.Now:yyyyMMddHHmmss}_{Path.GetFileName(file.FileName)}";
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            var fileName = $"{prefix}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString().Substring(0, 6)}{extension}";
             var directory = HttpContext.Current.Server.MapPath($"~/Uploads/{folderPath}");
 
             if (!Directory.Exists(directory))
@@ -25,6 +29,9 @@ namespace TEXCEL_ERP.Helpers
             return $"/Uploads/{folderPath}/{fileName}";
         }
 
+        /// <summary>
+        /// Delete file from server.
+        /// </summary>
         public static bool DeleteFile(string filePath)
         {
             try
@@ -45,29 +52,16 @@ namespace TEXCEL_ERP.Helpers
             }
         }
 
-        public static string GetFileSize(long bytes)
+        /// <summary>
+        /// Check if file is valid image.
+        /// </summary>
+        public static bool IsValidImage(HttpPostedFileBase file)
         {
-            string[] sizes = { "B", "KB", "MB", "GB" };
-            double len = bytes;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len = len / 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
+            if (file == null) return false;
 
-        public static bool IsImageFile(string fileName)
-        {
-            var ext = Path.GetExtension(fileName).ToLower();
-            return ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp";
-        }
-
-        public static bool IsDocumentFile(string fileName)
-        {
-            var ext = Path.GetExtension(fileName).ToLower();
-            return ext == ".pdf" || ext == ".doc" || ext == ".docx" || ext == ".xls" || ext == ".xlsx" || ext == ".txt";
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+            return Array.IndexOf(allowed, extension) >= 0;
         }
     }
 }

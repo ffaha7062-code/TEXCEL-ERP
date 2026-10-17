@@ -17,7 +17,7 @@ namespace TEXCEL_ERP.Models.Entities
         public int EmployeeId { get; set; }
 
         [Required]
-        [StringLength(20)]
+        [StringLength(50)]   // 20 → 50
         [Display(Name = "Employee Code")]
         public string EmployeeCode { get; set; }
 
@@ -40,6 +40,9 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Shift")]
         public int? ShiftId { get; set; }
 
+        // =============================================
+        // PERSONAL INFO
+        // =============================================
         [Required]
         [StringLength(100)]
         [Display(Name = "First Name")]
@@ -67,7 +70,7 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Gender")]
         public Gender Gender { get; set; }
 
-        [StringLength(100)]
+        [StringLength(50)]
         [Display(Name = "Nationality")]
         public string Nationality { get; set; }
 
@@ -83,6 +86,9 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Blood Group")]
         public string BloodGroup { get; set; }
 
+        // =============================================
+        // CONTACT INFO
+        // =============================================
         [Required]
         [StringLength(20)]
         [Display(Name = "Mobile Number")]
@@ -105,6 +111,9 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Permanent Address")]
         public string PermanentAddress { get; set; }
 
+        // =============================================
+        // EMPLOYMENT INFO
+        // =============================================
         [Required]
         [Display(Name = "Joining Date")]
         [DataType(DataType.Date)]
@@ -121,9 +130,28 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Employee Status")]
         public EmployeeStatus Status { get; set; } = EmployeeStatus.Probation;
 
+        // 🆕 TEXTILE SPECIFIC
+        [Display(Name = "Skill Type")]
+        public SkillType? SkillType { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "Machine Assigned")]
+        public string MachineAssigned { get; set; }
+
+        [Display(Name = "Reporting Manager")]
+        public int? ReportingManagerId { get; set; }
+
+        // =============================================
+        // SALARY INFO
+        // =============================================
         [Display(Name = "Basic Salary")]
         [Range(0, double.MaxValue)]
         public decimal BasicSalary { get; set; }
+
+        // 🆕 TEXTILE SPECIFIC
+        [Display(Name = "Piece Rate")]
+        [Range(0, double.MaxValue)]
+        public decimal? PieceRate { get; set; }
 
         [StringLength(50)]
         [Display(Name = "Bank Account Number")]
@@ -134,13 +162,27 @@ namespace TEXCEL_ERP.Models.Entities
         public string BankName { get; set; }
 
         [StringLength(100)]
-        [Display(Name = "Branch Name")]
+        [Display(Name = "Bank Branch Name")]
         public string BankBranchName { get; set; }
 
+        // =============================================
+        // DOCUMENTS
+        // =============================================
         [StringLength(500)]
         [Display(Name = "Photo Path")]
         public string PhotoPath { get; set; }
 
+        [StringLength(500)]
+        [Display(Name = "CNIC Front Path")]
+        public string CNICFrontPath { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "CNIC Back Path")]
+        public string CNICBackPath { get; set; }
+
+        // =============================================
+        // SYSTEM
+        // =============================================
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; } = true;
 
@@ -150,7 +192,9 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Modified Date")]
         public DateTime? ModifiedDate { get; set; }
 
-        // Navigation Properties
+        // =============================================
+        // NAVIGATION PROPERTIES
+        // =============================================
         [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; }
 
@@ -165,6 +209,9 @@ namespace TEXCEL_ERP.Models.Entities
 
         [ForeignKey("ShiftId")]
         public virtual Shift Shift { get; set; }
+
+        [ForeignKey("ReportingManagerId")]
+        public virtual Employee ReportingManager { get; set; }
 
         public virtual ICollection<Attendance> Attendances { get; set; }
         public virtual ICollection<Leave> Leaves { get; set; }

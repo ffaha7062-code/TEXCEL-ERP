@@ -11,8 +11,15 @@ using TEXCEL_ERP.Models.ViewModels;
 
 namespace TEXCEL_ERP.Controllers
 {
-    [SessionTimeout]
-    public class UserController : Controller
+    /// <summary>
+    /// User controller — SuperAdmin + BranchAdmin.
+    /// BranchAdmin = sirf apni branch ke users.
+    /// Manager = view only (apni branch).
+    /// Employee = access nahi.
+    /// </summary>
+    [RoleAuthorize("SuperAdmin", "BranchAdmin", "Manager")]
+    [BranchAuthorize]
+    public class UserController : BaseController
     {
         private readonly ApplicationDbContext _context;
 
@@ -21,11 +28,24 @@ namespace TEXCEL_ERP.Controllers
             _context = new ApplicationDbContext();
         }
 
+        // =============================================
+        // INDEX — User List
+        // =============================================
         // GET: /User
         public ActionResult Index(string search, bool? isActive)
         {
-            var users = _context.Users.ToList();
+            // ✅ Branch isolation: SuperAdmin = sab, baaki = apni branch
+            var usersQuery = _context.Users.AsQueryable();
 
+            if (!IsSuperAdmin && CurrentBranchId.HasValue)
+            {
+                int branchId = CurrentBranchId.Value;
+                usersQuery = usersQuery.Where(u => u.BranchId == branchId);
+            }
+
+            var users = usersQuery.ToList();
+
+            // Search filter
             if (!string.IsNullOrWhiteSpace(search))
             {
                 users = users.Where(u =>
@@ -34,6 +54,7 @@ namespace TEXCEL_ERP.Controllers
                     (u.Email ?? "").ToLower().Contains(search.ToLower())).ToList();
             }
 
+            // Status filter
             if (isActive.HasValue)
                 users = users.Where(u => u.IsActive == isActive.Value).ToList();
 
@@ -61,29 +82,124 @@ namespace TEXCEL_ERP.Controllers
 
             ViewBag.Search = search;
             ViewBag.IsActive = isActive;
-            ViewBag.Branches = _context.Branches.Where(b => b.IsActive).ToList();
-            ViewBag.Roles = _context.Roles.Select(r => r.Name).ToList();
+            ViewBag.CanModify = CanModify;
+            ViewBag.CanDelete = CanDeleteRecord;
+
+            // ✅ Branch dropdown — SuperAdmin = sab, BranchAdmin = own only
+            if (IsSuperAdmin)
+            {
+                ViewBag.Branches = _context.Branches.Where(b => b.IsActive).ToList();
+            }
+            else if (CurrentBranchId.HasValue)
+            {
+                int bid = CurrentBranchId.Value;
+                ViewBag.Branches = _context.Branches.Where(b => b.IsActive && b.BranchId == bid).ToList();
+            }
+            else
+            {
+                ViewBag.Branches = new List<Branch>();
+            }
+
+            // ✅ Roles dropdown — SuperAdmin = sab, BranchAdmin = Manager/Employee only
+            if (IsSuperAdmin)
+            {
+                ViewBag.Roles = _context.Roles.Select(r => r.Name).ToList();
+            }
+            else
+            {
+                ViewBag.Roles = new List<string> { "Manager", "Employee" };
+            }
 
             return View(model);
         }
 
-        // POST: /User/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(UserViewModel model, string Password)
+        // =============================================
+        // GET BY ID — For Edit Modal (AJAX)
+        // =============================================
+        // GET: /User/GetById/{id}
+        [HttpGet]
+        public JsonResult GetById(string id)
         {
             try
             {
+                var user = _context.Users.Find(id);
+                if (user == null)
+                {
+                    return ErrorResult("User not found.");
+                }
+
+                // ✅ Branch isolation check
+                if (!IsSuperAdmin && CurrentBranchId.HasValue)
+                {
+                    if (user.BranchId != CurrentBranchId.Value)
+                    {
+                        return ErrorResult("You don't have permission to view this user.");
+                    }
+                }
+
+                var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(_context));
+                var roles = userManager.GetRoles(user.Id);
+
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        Id = user.Id,
+                        user.FirstName,
+                        user.LastName,
+                        user.Email,
+                        user.PhoneNumber,
+                        user.BranchId,
+                        RoleName = roles.FirstOrDefault() ?? "",
+                        user.IsActive
+                    }
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return ErrorResult("Error: " + ex.Message);
+            }
+        }
+
+        // =============================================
+        // CREATE — POST (AJAX)
+        // =============================================
+        // POST: /User/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult Create(UserViewModel model, string Password)
+        {
+            try
+            {
+                if (!CanModify)
+                {
+                    return ErrorResult("You don't have permission to create users.");
+                }
+
                 if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(Password))
                 {
-                    TempData["Error"] = "Email and Password are required.";
-                    return RedirectToAction("Index");
+                    return ErrorResult("Email and Password are required.");
+                }
+
+                // ✅ BranchAdmin sirf apni branch mein user bana sakta hai
+                if (!IsSuperAdmin && CurrentBranchId.HasValue)
+                {
+                    model.BranchId = CurrentBranchId.Value;
                 }
 
                 if (_context.Users.Any(u => u.Email == model.Email))
                 {
-                    TempData["Error"] = "Email already exists.";
-                    return RedirectToAction("Index");
+                    return ErrorResult("Email already exists.");
+                }
+
+                // ✅ BranchAdmin sirf Manager/Employee bana sakta hai
+                if (!IsSuperAdmin)
+                {
+                    if (model.RoleName != "Manager" && model.RoleName != "Employee")
+                    {
+                        return ErrorResult("You can only create Manager or Employee users.");
+                    }
                 }
 
                 var user = new ApplicationUser
@@ -108,60 +224,168 @@ namespace TEXCEL_ERP.Controllers
                     {
                         userManager.AddToRole(user.Id, model.RoleName);
                     }
-                    TempData["Success"] = "User created successfully!";
+                    return SuccessResult("User created successfully!", new { id = user.Id });
                 }
-                else
-                {
-                    TempData["Error"] = string.Join(", ", result.Errors);
-                }
+
+                return ErrorResult(string.Join(", ", result.Errors));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Error: " + ex.Message;
+                return ErrorResult("Error: " + ex.Message);
             }
-
-            return RedirectToAction("Index");
         }
 
+        // =============================================
+        // EDIT — POST (AJAX)
+        // =============================================
+        // POST: /User/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult Edit(UserViewModel model)
+        {
+            try
+            {
+                if (!CanModify)
+                {
+                    return ErrorResult("You don't have permission to edit users.");
+                }
+
+                var user = _context.Users.Find(model.Id);
+                if (user == null)
+                {
+                    return ErrorResult("User not found.");
+                }
+
+                // ✅ Branch isolation check
+                if (!IsSuperAdmin && CurrentBranchId.HasValue)
+                {
+                    if (user.BranchId != CurrentBranchId.Value)
+                    {
+                        return ErrorResult("You don't have permission to edit this user.");
+                    }
+
+                    // BranchAdmin apni branch nahi badal sakta
+                    model.BranchId = CurrentBranchId.Value;
+                }
+
+                // ✅ BranchAdmin sirf Manager/Employee bana sakta hai
+                if (!IsSuperAdmin)
+                {
+                    if (model.RoleName != "Manager" && model.RoleName != "Employee")
+                    {
+                        return ErrorResult("You can only assign Manager or Employee roles.");
+                    }
+                }
+
+                user.FirstName = model.FirstName;
+                user.LastName = model.LastName;
+                user.PhoneNumber = model.PhoneNumber;
+                user.BranchId = model.BranchId;
+                user.IsActive = model.IsActive;
+
+                _context.SaveChanges();
+
+                // Update role
+                var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(_context));
+                var currentRoles = userManager.GetRoles(user.Id);
+
+                if (!string.IsNullOrWhiteSpace(model.RoleName))
+                {
+                    // Remove old roles
+                    if (currentRoles.Any())
+                    {
+                        userManager.RemoveFromRoles(user.Id, currentRoles.ToArray());
+                    }
+                    // Add new role
+                    userManager.AddToRole(user.Id, model.RoleName);
+                }
+
+                return SuccessResult("User updated successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ErrorResult("Error: " + ex.Message);
+            }
+        }
+
+        // =============================================
+        // TOGGLE STATUS — POST (AJAX)
+        // =============================================
         // POST: /User/ToggleStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult ToggleStatus(string id)
         {
             try
             {
-                var user = _context.Users.Find(id);
-                if (user != null)
+                if (!CanModify)
                 {
-                    user.IsActive = !user.IsActive;
-                    _context.SaveChanges();
-                    return Json(new { success = true, message = "Status updated." });
+                    return ErrorResult("You don't have permission to change status.");
                 }
-                return Json(new { success = false, message = "User not found." });
+
+                var user = _context.Users.Find(id);
+                if (user == null)
+                {
+                    return ErrorResult("User not found.");
+                }
+
+                // ✅ Branch isolation check
+                if (!IsSuperAdmin && CurrentBranchId.HasValue)
+                {
+                    if (user.BranchId != CurrentBranchId.Value)
+                    {
+                        return ErrorResult("You don't have permission to change this user's status.");
+                    }
+                }
+
+                user.IsActive = !user.IsActive;
+                _context.SaveChanges();
+
+                return SuccessResult("Status updated successfully.");
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return ErrorResult("Error: " + ex.Message);
             }
         }
 
+        // =============================================
+        // DELETE (Deactivate) — POST (AJAX)
+        // =============================================
         // POST: /User/Delete
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult Delete(string id)
         {
             try
             {
-                var user = _context.Users.Find(id);
-                if (user != null)
+                // ✅ Sirf SuperAdmin delete kar sakta hai
+                if (!IsSuperAdmin)
                 {
-                    user.IsActive = false;
-                    _context.SaveChanges();
-                    return Json(new { success = true, message = "User deactivated." });
+                    return ErrorResult("You don't have permission to delete users.");
                 }
-                return Json(new { success = false, message = "User not found." });
+
+                var user = _context.Users.Find(id);
+                if (user == null)
+                {
+                    return ErrorResult("User not found.");
+                }
+
+                // ✅ Khud ko delete na karein
+                if (user.Id == CurrentUserId)
+                {
+                    return ErrorResult("You cannot delete your own account.");
+                }
+
+                // Soft delete — deactivate
+                user.IsActive = false;
+                _context.SaveChanges();
+
+                return SuccessResult("User deactivated successfully.");
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return ErrorResult("Error: " + ex.Message);
             }
         }
     }

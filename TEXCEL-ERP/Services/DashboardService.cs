@@ -21,7 +21,7 @@ namespace TEXCEL_ERP.Services
         }
 
         // =============================================
-        // MAIN DASHBOARD DATA
+        // MAIN DASHBOARD DATA (All Branches — SuperAdmin)
         // =============================================
         public DashboardViewModel GetDashboardData()
         {
@@ -31,62 +31,46 @@ namespace TEXCEL_ERP.Services
 
             var model = new DashboardViewModel
             {
-                // =============================================
                 // EMPLOYEE STATS
-                // =============================================
                 TotalEmployees = _unitOfWork.Employees.Count(e => e.IsActive),
                 PresentToday = _unitOfWork.Attendances.Count(a => a.AttendanceDate == today && a.Status == AttendanceStatus.Present),
                 AbsentToday = _unitOfWork.Attendances.Count(a => a.AttendanceDate == today && a.Status == AttendanceStatus.Absent),
                 OnLeaveToday = _unitOfWork.Attendances.Count(a => a.AttendanceDate == today && a.Status == AttendanceStatus.Leave),
 
-                // =============================================
                 // PAYROLL STATS
-                // =============================================
                 MonthlyPayroll = _unitOfWork.Payrolls
                     .Find(p => p.Month == currentMonth && p.Year == currentYear)
                     .Sum(p => p.NetSalary),
 
-                // =============================================
                 // INVENTORY STATS
-                // =============================================
                 TotalFabricStock = _unitOfWork.FabricStocks.GetAll().Sum(s => s.Quantity),
                 TotalFabricRolls = _unitOfWork.FabricStocks.Count(),
 
-                // =============================================
                 // SALES STATS
-                // =============================================
                 MonthlySales = _unitOfWork.Invoices
                     .Find(i => i.InvoiceDate.Month == currentMonth && i.InvoiceDate.Year == currentYear)
                     .Sum(i => i.TotalAmount),
                 PendingOrders = _unitOfWork.SalesOrders.Count(o => o.Status == OrderStatus.Approved || o.Status == OrderStatus.InProduction),
 
-                // =============================================
                 // PRODUCTION STATS
-                // =============================================
                 MonthlyProduction = _unitOfWork.ProductionOrders
                     .Find(p => p.CreatedDate.Month == currentMonth && p.CreatedDate.Year == currentYear)
                     .Sum(p => p.ProducedQuantity),
 
-                // =============================================
                 // PURCHASE STATS
-                // =============================================
                 MonthlyPurchase = _unitOfWork.PurchaseOrders
                     .Find(p => p.PODate.Month == currentMonth && p.PODate.Year == currentYear)
                     .Sum(p => p.TotalAmount),
                 PendingPOs = _unitOfWork.PurchaseOrders.Count(o => o.Status == OrderStatus.Approved || o.Status == OrderStatus.Draft)
             };
 
-            // =============================================
             // ATTENDANCE PERCENTAGE
-            // =============================================
             if (model.TotalEmployees > 0)
             {
                 model.AttendancePercentage = Math.Round((decimal)model.PresentToday / model.TotalEmployees * 100, 1);
             }
 
-            // =============================================
             // PRODUCTION EFFICIENCY
-            // =============================================
             var productionOrders = _unitOfWork.ProductionOrders.GetAll().ToList();
             if (productionOrders.Any())
             {
@@ -98,38 +82,24 @@ namespace TEXCEL_ERP.Services
                 }
             }
 
-            // =============================================
-            // RECENT ORDERS
-            // =============================================
+            // RECENT ACTIVITIES
             model.RecentOrders = GetRecentOrders();
-
-            // =============================================
-            // RECENT TASKS
-            // =============================================
             model.RecentTasks = GetRecentTasks();
-
-            // =============================================
-            // NOTIFICATIONS
-            // =============================================
             model.Notifications = GetNotifications();
 
-            // =============================================
             // CHARTS DATA
-            // =============================================
             model.MonthlySalesChart = GetMonthlySalesChart();
             model.MonthlyProductionChart = GetMonthlyProductionChart();
             model.MonthlyPurchaseChart = GetMonthlyPurchaseChart();
 
-            // =============================================
-            // BRANCH PERFORMANCES
-            // =============================================
+            // BRANCH PERFORMANCES (only for SuperAdmin)
             model.BranchPerformances = GetBranchPerformances();
 
             return model;
         }
 
         // =============================================
-        // BRANCH DASHBOARD DATA
+        // BRANCH DASHBOARD DATA (BranchAdmin / Manager)
         // =============================================
         public DashboardViewModel GetBranchDashboardData(int branchId)
         {
@@ -144,6 +114,7 @@ namespace TEXCEL_ERP.Services
 
             var model = new DashboardViewModel
             {
+                // EMPLOYEE STATS
                 TotalEmployees = _unitOfWork.Employees.Count(e => e.BranchId == branchId && e.IsActive),
                 PresentToday = _unitOfWork.Attendances
                     .Find(a => a.AttendanceDate == today && employeeIds.Contains(a.EmployeeId) && a.Status == AttendanceStatus.Present)
@@ -154,27 +125,74 @@ namespace TEXCEL_ERP.Services
                 OnLeaveToday = _unitOfWork.Attendances
                     .Find(a => a.AttendanceDate == today && employeeIds.Contains(a.EmployeeId) && a.Status == AttendanceStatus.Leave)
                     .Count(),
+
+                // PAYROLL STATS
                 MonthlyPayroll = _unitOfWork.Payrolls
                     .Find(p => employeeIds.Contains(p.EmployeeId) && p.Month == currentMonth && p.Year == currentYear)
                     .Sum(p => p.NetSalary),
+
+                // INVENTORY STATS
                 TotalFabricStock = _unitOfWork.FabricStocks
                     .Find(s => s.BranchId == branchId)
                     .Sum(s => s.Quantity),
                 TotalFabricRolls = _unitOfWork.FabricStocks.Count(s => s.BranchId == branchId),
+
+                // SALES STATS
                 MonthlySales = _unitOfWork.Invoices
                     .Find(i => i.BranchId == branchId && i.InvoiceDate.Month == currentMonth && i.InvoiceDate.Year == currentYear)
                     .Sum(i => i.TotalAmount),
-                PendingOrders = _unitOfWork.SalesOrders.Count(o => o.BranchId == branchId && (o.Status == OrderStatus.Approved || o.Status == OrderStatus.InProduction))
+                PendingOrders = _unitOfWork.SalesOrders.Count(o => o.BranchId == branchId
+                    && (o.Status == OrderStatus.Approved || o.Status == OrderStatus.InProduction)),
+
+                // PRODUCTION STATS
+                MonthlyProduction = _unitOfWork.ProductionOrders
+                    .Find(p => p.BranchId == branchId
+                        && p.CreatedDate.Month == currentMonth
+                        && p.CreatedDate.Year == currentYear)
+                    .Sum(p => p.ProducedQuantity),
+
+                // PURCHASE STATS
+                MonthlyPurchase = _unitOfWork.PurchaseOrders
+                    .Find(p => p.BranchId == branchId
+                        && p.PODate.Month == currentMonth
+                        && p.PODate.Year == currentYear)
+                    .Sum(p => p.TotalAmount),
+                PendingPOs = _unitOfWork.PurchaseOrders.Count(o => o.BranchId == branchId
+                    && (o.Status == OrderStatus.Approved || o.Status == OrderStatus.Draft))
             };
 
+            // ATTENDANCE PERCENTAGE
             if (model.TotalEmployees > 0)
             {
                 model.AttendancePercentage = Math.Round((decimal)model.PresentToday / model.TotalEmployees * 100, 1);
             }
 
+            // PRODUCTION EFFICIENCY (branch-specific)
+            var productionOrders = _unitOfWork.ProductionOrders
+                .Find(p => p.BranchId == branchId)
+                .ToList();
+            if (productionOrders.Any())
+            {
+                var totalPlanned = productionOrders.Sum(p => p.PlannedQuantity);
+                var totalProduced = productionOrders.Sum(p => p.ProducedQuantity);
+                if (totalPlanned > 0)
+                {
+                    model.ProductionEfficiency = Math.Round((decimal)totalProduced / totalPlanned * 100, 1);
+                }
+            }
+
+            // RECENT ACTIVITIES
             model.RecentOrders = GetRecentOrders(branchId);
             model.RecentTasks = GetRecentTasks();
             model.Notifications = GetNotifications();
+
+            // CHARTS DATA (branch-specific)
+            model.MonthlySalesChart = GetMonthlySalesChart(branchId);
+            model.MonthlyProductionChart = GetMonthlyProductionChart(branchId);
+            model.MonthlyPurchaseChart = GetMonthlyPurchaseChart(branchId);
+
+            // BranchPerformances — BranchAdmin/Manager ko nahi chahiye
+            model.BranchPerformances = new List<BranchPerformance>();
 
             return model;
         }
@@ -276,16 +294,27 @@ namespace TEXCEL_ERP.Services
                 .ToList();
         }
 
-        private List<ChartData> GetMonthlySalesChart()
+        // =============================================
+        // CHART METHODS (Optional branchId parameter)
+        // =============================================
+
+        private List<ChartData> GetMonthlySalesChart(int? branchId = null)
         {
             var currentYear = DateTime.Now.Year;
             var data = new List<ChartData>();
 
             for (int month = 1; month <= 12; month++)
             {
-                var total = _unitOfWork.Invoices
-                    .Find(i => i.InvoiceDate.Year == currentYear && i.InvoiceDate.Month == month)
-                    .Sum(i => i.TotalAmount);
+                var query = _unitOfWork.Invoices
+                    .Find(i => i.InvoiceDate.Year == currentYear && i.InvoiceDate.Month == month);
+
+                if (branchId.HasValue)
+                {
+                    int bid = branchId.Value;
+                    query = query.Where(i => i.BranchId == bid);
+                }
+
+                var total = query.Sum(i => i.TotalAmount);
 
                 data.Add(new ChartData
                 {
@@ -297,16 +326,23 @@ namespace TEXCEL_ERP.Services
             return data;
         }
 
-        private List<ChartData> GetMonthlyProductionChart()
+        private List<ChartData> GetMonthlyProductionChart(int? branchId = null)
         {
             var currentYear = DateTime.Now.Year;
             var data = new List<ChartData>();
 
             for (int month = 1; month <= 12; month++)
             {
-                var total = _unitOfWork.ProductionOrders
-                    .Find(p => p.CreatedDate.Year == currentYear && p.CreatedDate.Month == month)
-                    .Sum(p => p.ProducedQuantity);
+                var query = _unitOfWork.ProductionOrders
+                    .Find(p => p.CreatedDate.Year == currentYear && p.CreatedDate.Month == month);
+
+                if (branchId.HasValue)
+                {
+                    int bid = branchId.Value;
+                    query = query.Where(p => p.BranchId == bid);
+                }
+
+                var total = query.Sum(p => p.ProducedQuantity);
 
                 data.Add(new ChartData
                 {
@@ -318,16 +354,23 @@ namespace TEXCEL_ERP.Services
             return data;
         }
 
-        private List<ChartData> GetMonthlyPurchaseChart()
+        private List<ChartData> GetMonthlyPurchaseChart(int? branchId = null)
         {
             var currentYear = DateTime.Now.Year;
             var data = new List<ChartData>();
 
             for (int month = 1; month <= 12; month++)
             {
-                var total = _unitOfWork.PurchaseOrders
-                    .Find(p => p.PODate.Year == currentYear && p.PODate.Month == month)
-                    .Sum(p => p.TotalAmount);
+                var query = _unitOfWork.PurchaseOrders
+                    .Find(p => p.PODate.Year == currentYear && p.PODate.Month == month);
+
+                if (branchId.HasValue)
+                {
+                    int bid = branchId.Value;
+                    query = query.Where(p => p.BranchId == bid);
+                }
+
+                var total = query.Sum(p => p.TotalAmount);
 
                 data.Add(new ChartData
                 {
@@ -353,12 +396,16 @@ namespace TEXCEL_ERP.Services
                     .Find(i => i.BranchId == b.BranchId && i.InvoiceDate.Month == currentMonth && i.InvoiceDate.Year == currentYear)
                     .Sum(i => i.TotalAmount),
                 Production = _unitOfWork.ProductionOrders
-                    .Find(p => p.CreatedDate.Month == currentMonth && p.CreatedDate.Year == currentYear)
+                    .Find(p => p.BranchId == b.BranchId && p.CreatedDate.Month == currentMonth && p.CreatedDate.Year == currentYear)
                     .Sum(p => p.ProducedQuantity),
                 Employees = _unitOfWork.Employees.Count(e => e.BranchId == b.BranchId && e.IsActive),
                 Efficiency = 75 // placeholder — later calculate
             }).ToList();
         }
+
+        // =============================================
+        // COLOR / ICON / TIME HELPERS
+        // =============================================
 
         private string GetStatusColor(OrderStatus status)
         {

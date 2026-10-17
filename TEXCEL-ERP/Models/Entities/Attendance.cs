@@ -19,6 +19,11 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Employee")]
         public int EmployeeId { get; set; }
 
+        // ✅ NEW: BranchId
+        [Required]
+        [Display(Name = "Branch")]
+        public int BranchId { get; set; }
+
         [Required]
         [Display(Name = "Date")]
         [DataType(DataType.Date)]
@@ -47,6 +52,10 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Overtime Hours")]
         public decimal OvertimeHours { get; set; } = 0;
 
+        // ✅ NEW: Less Time Hours
+        [Display(Name = "Less Time Hours")]
+        public decimal LessTimeHours { get; set; } = 0;
+
         [Display(Name = "Worked Hours")]
         public decimal WorkedHours { get; set; } = 0;
 
@@ -57,12 +66,29 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Is Approved")]
         public bool IsApproved { get; set; } = false;
 
+        // ✅ NEW: Verification / Sign
+        [Display(Name = "Is Verified")]
+        public bool IsVerified { get; set; } = false;
+
+        [Display(Name = "Verified By")]
+        public int? VerifiedBy { get; set; }
+
+        [Display(Name = "Verified Date")]
+        public DateTime? VerifiedDate { get; set; }
+
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        [Display(Name = "Modified Date")]
+        public DateTime? ModifiedDate { get; set; }
 
         // Navigation Properties
         [ForeignKey("EmployeeId")]
         public virtual Employee Employee { get; set; }
+
+        // ✅ NEW: Branch navigation
+        [ForeignKey("BranchId")]
+        public virtual Branch Branch { get; set; }
 
         [ForeignKey("ShiftId")]
         public virtual Shift Shift { get; set; }

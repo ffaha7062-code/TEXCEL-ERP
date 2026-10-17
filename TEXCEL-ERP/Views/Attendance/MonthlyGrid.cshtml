@@ -1,0 +1,428 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.MonthlyAttendanceGridViewModel
+@{
+    ViewBag.Title = "Monthly Attendance Grid";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var branches = ViewBag.Branches as List<TEXCEL_ERP.Models.Entities.Branch>;
+    var departments = ViewBag.Departments as List<TEXCEL_ERP.Models.Entities.Department>;
+    var selectedBranchId = ViewBag.SelectedBranchId as int?;
+    var selectedDepartmentId = ViewBag.SelectedDepartmentId as int?;
+    var month = (int)ViewBag.Month;
+    var year = (int)ViewBag.Year;
+
+    var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+}
+
+@section styles {
+    <style>
+
+        /* ============================================= */
+        /* PAGE HEADER — Compact Yellow Theme            */
+        /* ============================================= */
+        .page-header-grid {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.30);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .page-header-grid .header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.25);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .page-header-grid h1 {
+                font-size: 20px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: white;
+            }
+
+            .page-header-grid p {
+                font-size: 12px;
+                margin: 4px 0 0 0;
+                color: rgba(255, 255, 255, 0.90);
+            }
+
+        /* Back Button */
+        .page-back-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.40);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+            .page-back-btn:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.65);
+                color: white;
+                text-decoration: none;
+                transform: translateX(-4px);
+            }
+        /* Yellow buttons */
+        .btn-filter-primary {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+            color: white !important;
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.35) !important;
+        }
+
+        /* Grid header accent */
+        .grid-table thead th {
+            background: rgba(251, 191, 36, 0.15) !important;
+            color: #92400e !important;
+        }
+
+        .legend {
+            background: rgba(251, 191, 36, 0.05) !important;
+            border-color: rgba(251, 191, 36, 0.20) !important;
+        }
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+            .page-header h1 i {
+                color: var(--gold);
+                margin-right: 10px;
+            }
+
+        .filter-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px 24px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 120px 120px 220px 220px auto;
+            gap: 14px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .filter-group label {
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+            }
+
+            .filter-group input, .filter-group select {
+                padding: 10px 12px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+            }
+
+        .btn-filter-primary {
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Grid */
+        .grid-wrapper {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: auto;
+            max-height: 70vh;
+        }
+
+        .grid-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 11px;
+            min-width: 100%;
+        }
+
+            .grid-table th, .grid-table td {
+                border-right: 1px solid var(--border-color);
+                border-bottom: 1px solid var(--border-color);
+                padding: 6px 8px;
+                text-align: center;
+                white-space: nowrap;
+            }
+
+            .grid-table thead th {
+                background: rgba(108, 60, 176, 0.10);
+                font-weight: 700;
+                font-size: 10px;
+                text-transform: uppercase;
+                color: var(--text-secondary);
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .grid-table td.name-cell,
+            .grid-table th.name-cell {
+                text-align: left;
+                min-width: 180px;
+                position: sticky;
+                left: 0;
+                background: var(--bg-card);
+                z-index: 5;
+                font-weight: 600;
+            }
+
+            .grid-table thead th.name-cell {
+                z-index: 15;
+                background: rgba(108, 60, 176, 0.10);
+            }
+
+        .status-p {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .status-a {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .status-l {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .status-h {
+            background: rgba(251, 191, 36, 0.15);
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .status-ho {
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
+            font-weight: 700;
+        }
+
+        .status-w {
+            background: rgba(107, 114, 128, 0.12);
+            color: #6b7280;
+            font-weight: 700;
+        }
+
+        .status-none {
+            color: #d1d5db;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 12px 20px;
+            font-size: 12px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+            .legend span {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: 600;
+                color: var(--text-secondary);
+            }
+
+            .legend .box {
+                display: inline-block;
+                width: 24px;
+                height: 20px;
+                border-radius: 4px;
+                text-align: center;
+                line-height: 20px;
+                font-size: 10px;
+                font-weight: 700;
+            }
+    </style>
+}
+
+<div class="page-header-grid">
+    <a href="@Url.Action("Index", "Attendance")" class="page-back-btn" title="Back to Attendance">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div class="header-icon">
+        <i class="fas fa-th"></i>
+    </div>
+    <div>
+        <h1>Monthly Attendance Grid</h1>
+        <p>Month-wise attendance matrix with color-coded status</p>
+    </div>
+</div><!-- FILTER -->
+<div class="filter-card">
+    <form method="get" action="@Url.Action("MonthlyGrid", "Attendance")">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>Month</label>
+                <select name="month">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" @(month == m ? "selected" : "")>@months[m - 1]</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Year</label>
+                <select name="year">
+                    @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                    {
+                        <option value="@y" @(year == y ? "selected" : "")>@y</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Branch</label>
+                <select name="branchId">
+                    <option value="">All Branches</option>
+                    @if (branches != null)
+                    {
+                        foreach (var b in branches)
+                        {
+                            <option value="@b.BranchId" @(selectedBranchId == b.BranchId ? "selected" : "")>@b.BranchName</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Department</label>
+                <select name="departmentId">
+                    <option value="">All Departments</option>
+                    @if (departments != null)
+                    {
+                        foreach (var d in departments)
+                        {
+                            <option value="@d.DepartmentId" @(selectedDepartmentId == d.DepartmentId ? "selected" : "")>@d.DepartmentName</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <button type="submit" class="btn-filter-primary">
+                    <i class="fas fa-search"></i> Load Grid
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+    <span><span class="box status-p">P</span> Present</span>
+    <span><span class="box status-a">A</span> Absent</span>
+    <span><span class="box status-l">L</span> Leave</span>
+    <span><span class="box status-h">H</span> Half Day</span>
+    <span><span class="box status-ho">HO</span> Holiday</span>
+    <span><span class="box status-w">W</span> Weekend</span>
+    <span><span class="box status-none">-</span> No Record</span>
+</div>
+
+<!-- GRID -->
+<div class="grid-wrapper">
+    @if (Model != null && Model.Employees != null && Model.Employees.Any())
+    {
+        <table class="grid-table">
+            <thead>
+                <tr>
+                    <th class="name-cell">Employee</th>
+                    @for (int day = 1; day <= Model.DaysInMonth; day++)
+                    {
+                        var dayDate = new DateTime(Model.Year, Model.Month, day);
+                        <th>@day<span style="font-size:8px; display:block; font-weight:500;">@dayDate.ToString("ddd")</span></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var emp in Model.Employees)
+                {
+                    <tr>
+                        <td class="name-cell">
+                            @emp.EmployeeName
+                            <span style="font-size:9px; color:var(--text-muted); display:block;">@emp.EmployeeCode | @emp.DepartmentName</span>
+                        </td>
+                        @for (int day = 1; day <= Model.DaysInMonth; day++)
+                        {
+                            var status = emp.DailyStatus.ContainsKey(day) ? emp.DailyStatus[day] : "-";
+                            var cssClass = "status-none";
+                            switch (status)
+                            {
+                                case "P": cssClass = "status-p"; break;
+                                case "A": cssClass = "status-a"; break;
+                                case "L": cssClass = "status-l"; break;
+                                case "H": cssClass = "status-h"; break;
+                                case "HO": cssClass = "status-ho"; break;
+                                case "W": cssClass = "status-w"; break;
+                                default: cssClass = "status-none"; break;
+                            }
+                            <td class="@cssClass">@status</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+            <i class="fas fa-th" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px;"></i>
+            <h3>No Data</h3>
+            <p>Select Month, Year, Branch and click "Load Grid".</p>
+        </div>
+    }
+</div>

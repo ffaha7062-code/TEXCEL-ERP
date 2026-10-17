@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TEXCEL_ERP.Data;
 using TEXCEL_ERP.Data.Repository;
 using TEXCEL_ERP.Models.Entities;
 
@@ -20,21 +21,23 @@ namespace TEXCEL_ERP.Services
 
         public IEnumerable<Branch> GetAllBranches()
         {
-            return _unitOfWork.Branches.GetAll()
+            return _unitOfWork.Branches.Find(b => !b.IsDeleted)   // ✅ Sirf non-deleted
                 .OrderBy(b => b.BranchName)
                 .ToList();
         }
 
         public IEnumerable<Branch> GetActiveBranches()
         {
-            return _unitOfWork.Branches.Find(b => b.IsActive)
+            return _unitOfWork.Branches.Find(b => b.IsActive && !b.IsDeleted)
                 .OrderBy(b => b.BranchName)
                 .ToList();
         }
 
         public Branch GetBranchById(int id)
         {
-            return _unitOfWork.Branches.GetById(id);
+            var branch = _unitOfWork.Branches.GetById(id);
+            if (branch != null && branch.IsDeleted) return null;   // ✅ Deleted = not found
+            return branch;
         }
 
         public Branch GetBranchByCode(string code)
@@ -60,7 +63,7 @@ namespace TEXCEL_ERP.Services
             var branch = _unitOfWork.Branches.GetById(id);
             if (branch != null)
             {
-                branch.IsActive = false;
+                branch.IsDeleted = true;                   // ✅ Soft delete
                 _unitOfWork.Branches.Update(branch);
                 _unitOfWork.Complete();
             }
@@ -80,13 +83,15 @@ namespace TEXCEL_ERP.Services
         public bool IsBranchCodeExists(string code, int? excludeId = null)
         {
             if (excludeId.HasValue)
-                return _unitOfWork.Branches.Any(b => b.BranchCode == code && b.BranchId != excludeId.Value);
-            return _unitOfWork.Branches.Any(b => b.BranchCode == code);
+                return _unitOfWork.Branches.Any(b => b.BranchCode == code
+                    && b.BranchId != excludeId.Value
+                    && !b.IsDeleted);
+            return _unitOfWork.Branches.Any(b => b.BranchCode == code && !b.IsDeleted);
         }
 
         public int GetTotalBranches()
         {
-            return _unitOfWork.Branches.Count();
+            return _unitOfWork.Branches.Count(b => !b.IsDeleted);   // ✅ Sirf non-deleted
         }
     }
 }

@@ -67,6 +67,18 @@ namespace TEXCEL_ERP.Data.Repository
         public IRepository<Employee> Employees { get; private set; }
         public IRepository<Shift> Shifts { get; private set; }
         public IRepository<Attendance> Attendances { get; private set; }
+
+        private IRepository<Holiday> _holidays;
+        public IRepository<Holiday> Holidays
+        {
+            get
+            {
+                if (_holidays == null)
+                    _holidays = new Repository<Holiday>(_context);
+                return _holidays;
+            }
+        }
+
         public IRepository<Leave> Leaves { get; private set; }
         public IRepository<LeavePolicy> LeavePolicies { get; private set; }
         public IRepository<SalaryHead> SalaryHeads { get; private set; }

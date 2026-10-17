@@ -1,0 +1,562 @@
+﻿@model List<TEXCEL_ERP.Models.Entities.Attendance>
+@using TEXCEL_ERP.Models.Enums
+@{
+    ViewBag.Title = "My Attendance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var emp = ViewBag.Employee as TEXCEL_ERP.Models.Entities.Employee;
+    var monthName = ViewBag.MonthName as string;
+    var month = (int)ViewBag.Month;
+    var year = (int)ViewBag.Year;
+    var totalPresent = (int)ViewBag.TotalPresent;
+    var totalAbsent = (int)ViewBag.TotalAbsent;
+    var totalLeave = (int)ViewBag.TotalLeave;
+    var totalLate = (int)ViewBag.TotalLate;
+    var totalOT = (decimal)ViewBag.TotalOvertime;
+    var totalLess = (decimal)ViewBag.TotalLessTime;
+
+    var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+}
+
+@section styles {
+    <style>
+        /* ============================================= */
+        /* PAGE HEADER — Compact Teal Theme              */
+        /* ============================================= */
+        .page-header-myatt {
+            background: linear-gradient(135deg, #14b8a6, #06b6d4);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(20, 184, 166, 0.30);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .page-header-myatt .header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.20);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .page-header-myatt h1 {
+                font-size: 20px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: white;
+            }
+
+            .page-header-myatt p {
+                font-size: 12px;
+                margin: 4px 0 0 0;
+                color: rgba(255, 255, 255, 0.85);
+            }
+
+        /* Back Button */
+        .page-back-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+            .page-back-btn:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.60);
+                color: white;
+                text-decoration: none;
+                transform: translateX(-4px);
+            }
+
+        /* ============================================= */
+        /* STATS GRID                                     */
+        /* ============================================= */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(20, 184, 166, 0.10);
+            }
+
+            .stat-card .num {
+                font-size: 28px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+            }
+
+            .stat-card .lbl {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                color: var(--text-secondary);
+                margin-top: 6px;
+            }
+
+        .stat-present {
+            border-top: 3px solid #10b981;
+        }
+
+            .stat-present .num {
+                color: #10b981;
+            }
+
+        .stat-absent {
+            border-top: 3px solid #ef4444;
+        }
+
+            .stat-absent .num {
+                color: #ef4444;
+            }
+
+        .stat-leave {
+            border-top: 3px solid #3b82f6;
+        }
+
+            .stat-leave .num {
+                color: #3b82f6;
+            }
+
+        .stat-ot {
+            border-top: 3px solid #f59e0b;
+        }
+
+            .stat-ot .num {
+                color: #f59e0b;
+            }
+
+        .stat-less {
+            border-top: 3px solid #8b5cf6;
+        }
+
+            .stat-less .num {
+                color: #8b5cf6;
+            }
+
+        /* ============================================= */
+        /* PROFESSIONAL FILTER — Inline Horizontal        */
+        /* ============================================= */
+        .filter-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.05);
+        }
+
+            .filter-card .filter-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text-primary);
+                padding-right: 14px;
+                border-right: 1px solid var(--border-color);
+                margin-right: 4px;
+            }
+
+                .filter-card .filter-title i {
+                    color: #14b8a6;
+                    font-size: 14px;
+                }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .filter-group label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                white-space: nowrap;
+            }
+
+            .filter-group select {
+                padding: 9px 32px 9px 14px;
+                border-radius: 8px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                font-weight: 600;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                cursor: pointer;
+                transition: all 0.3s;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2314b8a6' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                min-width: 100px;
+            }
+
+                .filter-group select:focus {
+                    border-color: #14b8a6;
+                    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.10);
+                }
+
+        .btn-filter {
+            padding: 9px 20px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #14b8a6, #06b6d4);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+            .btn-filter:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 16px rgba(20, 184, 166, 0.35);
+            }
+
+        /* ============================================= */
+        /* TABLE CARD                                     */
+        /* ============================================= */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.05);
+        }
+
+            .table-card table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .table-card thead {
+                background: rgba(20, 184, 166, 0.06);
+            }
+
+            .table-card th {
+                padding: 12px 14px;
+                text-align: left;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid var(--border-color);
+                white-space: nowrap;
+            }
+
+            .table-card td {
+                padding: 12px 14px;
+                font-size: 13px;
+                border-bottom: 1px solid var(--border-color);
+                color: var(--text-primary);
+            }
+
+            .table-card tbody tr:hover {
+                background: rgba(20, 184, 166, 0.03);
+            }
+
+            .table-card tr:last-child td {
+                border-bottom: none;
+            }
+
+        /* Status Badges */
+        .badge-present {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-absent {
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-leave {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-halfday {
+            background: rgba(251, 191, 36, 0.15);
+            color: #f59e0b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-holiday {
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-weekend {
+            background: rgba(107, 114, 128, 0.12);
+            color: #6b7280;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* ============================================= */
+        /* RESPONSIVE                                     */
+        /* ============================================= */
+        @@media (max-width: 1000px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 700px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+                .filter-card .filter-title {
+                    border-right: none;
+                    border-bottom: 1px solid var(--border-color);
+                    padding-bottom: 10px;
+                    padding-right: 0;
+                    margin-right: 0;
+                    margin-bottom: 6px;
+                }
+
+            .filter-group {
+                justify-content: space-between;
+            }
+
+                .filter-group select {
+                    flex: 1;
+                }
+        }
+    </style>
+}
+
+<!-- ============================================= -->
+<!-- COMPACT HEADER                                 -->
+<!-- ============================================= -->
+<div class="page-header-myatt">
+    <a href="@Url.Action("Index", "Attendance")" class="page-back-btn" title="Back to Attendance">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div class="header-icon">
+        <i class="fas fa-user-clock"></i>
+    </div>
+    <div>
+        <h1>My Attendance</h1>
+        <p>
+            @if (emp != null)
+            {
+                <strong>@emp.FirstName @emp.LastName</strong>
+                <span> — @emp.EmployeeCode</span>
+            }
+            <span> • @monthName</span>
+        </p>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- STATS ROW                                      -->
+<!-- ============================================= -->
+<div class="stats-grid">
+    <div class="stat-card stat-present">
+        <div class="num">@totalPresent</div>
+        <div class="lbl">Present</div>
+    </div>
+    <div class="stat-card stat-absent">
+        <div class="num">@totalAbsent</div>
+        <div class="lbl">Absent</div>
+    </div>
+    <div class="stat-card stat-leave">
+        <div class="num">@totalLeave</div>
+        <div class="lbl">Leave</div>
+    </div>
+    <div class="stat-card stat-ot">
+        <div class="num">@totalOT.ToString("0.0")</div>
+        <div class="lbl">OT Hours</div>
+    </div>
+    <div class="stat-card stat-less">
+        <div class="num">@totalLess.ToString("0.0")</div>
+        <div class="lbl">Less Hours</div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- PROFESSIONAL FILTER — Inline                   -->
+<!-- ============================================= -->
+<div class="filter-card">
+    <div class="filter-title">
+        <i class="fas fa-filter"></i>
+        <span>Filter</span>
+    </div>
+
+    <form method="get" action="@Url.Action("MyAttendance", "Attendance")" style="display: contents;">
+        <div class="filter-group">
+            <label>Month</label>
+            <select name="month">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    <option value="@m" @(month == m ? "selected" : "")>@months[m - 1]</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Year</label>
+            <select name="year">
+                @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                {
+                    <option value="@y" @(year == y ? "selected" : "")>@y</option>
+                }
+            </select>
+        </div>
+
+        <button type="submit" class="btn-filter">
+            <i class="fas fa-search"></i> Load
+        </button>
+    </form>
+</div>
+
+<!-- ============================================= -->
+<!-- ATTENDANCE TABLE                               -->
+<!-- ============================================= -->
+<div class="table-card">
+    @if (Model != null && Model.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Worked</th>
+                    <th>OT</th>
+                    <th>Less</th>
+                    <th>Late</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var att in Model)
+                {
+                    <tr>
+                        <td>@att.AttendanceDate.ToString("dd MMM yyyy")</td>
+                        <td>@att.AttendanceDate.ToString("ddd")</td>
+                        <td>@(att.CheckIn.HasValue ? att.CheckIn.Value.ToString(@"hh\:mm") : "-")</td>
+                        <td>@(att.CheckOut.HasValue ? att.CheckOut.Value.ToString(@"hh\:mm") : "-")</td>
+                        <td>@att.WorkedHours.ToString("0.00")</td>
+                        <td style="color:#10b981; font-weight:600;">@att.OvertimeHours.ToString("0.00")</td>
+                        <td style="color:#ef4444; font-weight:600;">@att.LessTimeHours.ToString("0.00")</td>
+                        <td>@att.LateMinutes</td>
+                        <td>
+                            @switch (att.Status)
+                            {
+                                case AttendanceStatus.Present:
+                                    <span class="badge-present">Present</span>
+                                    break;
+                                case AttendanceStatus.Absent:
+                                    <span class="badge-absent">Absent</span>
+                                    break;
+                                case AttendanceStatus.Leave:
+                                    <span class="badge-leave">Leave</span>
+                                    break;
+                                case AttendanceStatus.HalfDay:
+                                    <span class="badge-halfday">Half Day</span>
+                                    break;
+                                case AttendanceStatus.Holiday:
+                                    <span class="badge-holiday">Holiday</span>
+                                    break;
+                                case AttendanceStatus.Weekend:
+                                    <span class="badge-weekend">Weekend</span>
+                                    break;
+                                default:
+                                    <span style="color:var(--text-muted);">-</span>
+                                    break;
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+            <i class="fas fa-calendar-times" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px;"></i>
+            <h3>No Attendance Records</h3>
+            <p>Selected month mein koi attendance nahi hai.</p>
+        </div>
+    }
+</div>

@@ -1,0 +1,958 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.FullAttendanceReportViewModel
+@using TEXCEL_ERP.Models.Enums
+@{
+    ViewBag.Title = "Full Attendance Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var isSuperAdmin = ViewBag.IsSuperAdmin != null && (bool)ViewBag.IsSuperAdmin;
+    var selectedBranchId = ViewBag.SelectedBranchId as int?;
+    var selectedDepartmentId = ViewBag.SelectedDepartmentId as int?;
+    var selectedEmployeeId = ViewBag.SelectedEmployeeId as int?;
+    var selectedStatus = ViewBag.SelectedStatus as AttendanceStatus?;
+
+    var totalPresent = Model.Records.Count(r => r.Status == AttendanceStatus.Present);
+    var attendancePct = Model.TotalRecords > 0
+        ? Math.Round((decimal)totalPresent / Model.TotalRecords * 100, 1)
+        : 0;
+}
+
+@section styles {
+    <style>
+        /* ============================================= */
+        /* FULL ATTENDANCE — TEAL THEME                  */
+        /* ============================================= */
+
+        .page-header-full {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(13, 148, 136, 0.30);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .page-header-full .header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.20);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .page-header-full h1 {
+                font-size: 20px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: white;
+            }
+
+            .page-header-full p {
+                font-size: 12px;
+                margin: 4px 0 0 0;
+                color: rgba(255, 255, 255, 0.85);
+            }
+
+        .page-back-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+            .page-back-btn:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.60);
+                color: white;
+                text-decoration: none;
+                transform: translateX(-4px);
+            }
+
+        /* Filter Bar — 2 rows */
+        .filter-bar {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(13, 148, 136, 0.05);
+        }
+
+        .filter-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+            .filter-title i {
+                color: #0d9488;
+            }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .filter-row-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .filter-group label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+                .filter-group label i {
+                    font-size: 10px;
+                    color: #0d9488;
+                }
+
+            .filter-group input,
+            .filter-group select {
+                padding: 9px 12px;
+                border-radius: 8px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 12px;
+                font-weight: 600;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                transition: all 0.3s;
+                width: 100%;
+            }
+
+                .filter-group input:focus,
+                .filter-group select:focus {
+                    border-color: #0d9488;
+                    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.10);
+                }
+
+        .btn-generate {
+            padding: 10px 22px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.30);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+            .btn-generate:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 16px rgba(13, 148, 136, 0.40);
+            }
+
+        .btn-reset {
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+            .btn-reset:hover {
+                background: var(--bg-body);
+                border-color: #0d9488;
+                color: #0d9488;
+                text-decoration: none;
+            }
+
+        /* KPI */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px 16px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .kpi-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+            }
+
+            .kpi-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+            }
+
+            .kpi-card .kpi-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .kpi-card .kpi-value {
+                font-size: 22px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                line-height: 1;
+                margin-bottom: 6px;
+            }
+
+            .kpi-card .kpi-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+            }
+
+        .kpi-records::before {
+            background: #0d9488;
+        }
+
+        .kpi-records .kpi-icon {
+            background: rgba(13, 148, 136, 0.12);
+            color: #0d9488;
+        }
+
+        .kpi-records .kpi-value {
+            color: #0d9488;
+        }
+
+        .kpi-worked::before {
+            background: #14b8a6;
+        }
+
+        .kpi-worked .kpi-icon {
+            background: rgba(20, 184, 166, 0.12);
+            color: #14b8a6;
+        }
+
+        .kpi-worked .kpi-value {
+            color: #14b8a6;
+        }
+
+        .kpi-ot::before {
+            background: #10b981;
+        }
+
+        .kpi-ot .kpi-icon {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .kpi-ot .kpi-value {
+            color: #10b981;
+        }
+
+        .kpi-less::before {
+            background: #ef4444;
+        }
+
+        .kpi-less .kpi-icon {
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+        .kpi-less .kpi-value {
+            color: #ef4444;
+        }
+
+        .kpi-present::before {
+            background: #22c55e;
+        }
+
+        .kpi-present .kpi-icon {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+        }
+
+        .kpi-present .kpi-value {
+            color: #22c55e;
+        }
+
+        .kpi-pct::before {
+            background: #06b6d4;
+        }
+
+        .kpi-pct .kpi-icon {
+            background: rgba(6, 182, 212, 0.12);
+            color: #06b6d4;
+        }
+
+        .kpi-pct .kpi-value {
+            color: #06b6d4;
+        }
+
+        /* Table */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(13, 148, 136, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .table-header {
+            padding: 16px 24px;
+            background: rgba(13, 148, 136, 0.04);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+            .table-header h3 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 700;
+                font-family: 'Space Grotesk', sans-serif;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .table-header h3 i {
+                    color: #0d9488;
+                }
+
+            .table-header .record-count {
+                font-size: 12px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .data-table thead {
+                background: rgba(13, 148, 136, 0.03);
+            }
+
+            .data-table th {
+                padding: 11px 12px;
+                text-align: left;
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid var(--border-color);
+                white-space: nowrap;
+            }
+
+            .data-table td {
+                padding: 11px 12px;
+                font-size: 12px;
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .data-table tbody tr:hover {
+                background: rgba(13, 148, 136, 0.03);
+            }
+
+            .data-table tr:last-child td {
+                border-bottom: none;
+            }
+
+        .emp-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .emp-mini .emp-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #0d9488, #14b8a6);
+                color: white;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 12px;
+                flex-shrink: 0;
+            }
+
+            .emp-mini .emp-name {
+                font-weight: 600;
+                font-size: 12px;
+                color: var(--text-primary);
+                display: block;
+            }
+
+            .emp-mini .emp-code {
+                font-size: 10px;
+                color: var(--text-muted);
+                display: block;
+            }
+
+        /* Badges */
+        .badge-present {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-absent {
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-leave {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-halfday {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-holiday {
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-weekend {
+            background: rgba(107, 114, 128, 0.12);
+            color: #6b7280;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .text-ot {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .text-less {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .text-late {
+            color: #f43f5e;
+            font-weight: 600;
+        }
+
+        /* Export */
+        .export-bar {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px 24px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+            .export-bar .export-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text-primary);
+            }
+
+                .export-bar .export-title i {
+                    color: #0d9488;
+                }
+
+            .export-bar .export-buttons {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+        .btn-export {
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            border: none;
+            text-decoration: none;
+        }
+
+            .btn-export:hover {
+                transform: translateY(-1px);
+            }
+
+        .btn-print {
+            background: rgba(107, 114, 128, 0.12);
+            color: #4b5563;
+        }
+
+            .btn-print:hover {
+                background: rgba(107, 114, 128, 0.20);
+            }
+
+        .btn-pdf {
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+            .btn-pdf:hover {
+                background: rgba(239, 68, 68, 0.18);
+            }
+
+        .btn-excel {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+            .btn-excel:hover {
+                background: rgba(16, 185, 129, 0.20);
+            }
+
+        .btn-csv {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+        }
+
+            .btn-csv:hover {
+                background: rgba(59, 130, 246, 0.20);
+            }
+
+        @@media (max-width: 1200px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .filter-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 700px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-row-actions {
+                flex-direction: column;
+            }
+
+                .filter-row-actions .btn-generate,
+                .filter-row-actions .btn-reset {
+                    width: 100%;
+                    justify-content: center;
+                }
+        }
+
+        @@media print {
+            .page-header-full, .filter-bar, .export-bar, .page-back-btn,
+            .top-navbar, .footer, .report-subnav {
+                display: none !important;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+            body {
+                background: white !important;
+            }
+        }
+    </style>
+}
+
+<!-- SUB-NAV -->
+@Html.Partial("_ReportNav")
+
+<!-- HEADER -->
+<div class="page-header-full">
+    <a href="@Url.Action("Index", "AttendanceReport")" class="page-back-btn" title="Back to Reports">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div class="header-icon">
+        <i class="fas fa-list-alt"></i>
+    </div>
+    <div>
+        <h1>Full Attendance Report</h1>
+        <p>
+            @Model.FromDate.ToString("dd MMM yyyy")
+            <span> — </span>
+            <span>@Model.ToDate.ToString("dd MMM yyyy")</span>
+            <span> • </span>
+            <span>All Attendance Records</span>
+        </p>
+    </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <div class="filter-title">
+        <i class="fas fa-filter"></i>
+        <span>Advanced Filter</span>
+    </div>
+
+    <form method="get" action="@Url.Action("FullAttendance", "AttendanceReport")">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label><i class="fas fa-calendar"></i> From Date</label>
+                <input type="date" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" required />
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-calendar"></i> To Date</label>
+                <input type="date" name="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" required />
+            </div>
+
+            @if (isSuperAdmin)
+            {
+                <div class="filter-group">
+                    <label><i class="fas fa-building"></i> Branch</label>
+                    <select name="branchId" id="branchFilter">
+                        <option value="">All Branches</option>
+                        @if (Model.Branches != null)
+                        {
+                            foreach (var b in Model.Branches)
+                            {
+                                <option value="@b.BranchId" @(selectedBranchId == b.BranchId ? "selected" : "")>@b.BranchName</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="filter-group">
+                <label><i class="fas fa-sitemap"></i> Department</label>
+                <select name="departmentId">
+                    <option value="">All Departments</option>
+                    @if (Model.Departments != null)
+                    {
+                        foreach (var d in Model.Departments)
+                        {
+                            <option value="@d.DepartmentId" @(selectedDepartmentId == d.DepartmentId ? "selected" : "")>@d.DepartmentName</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-user"></i> Employee</label>
+                <select name="employeeId">
+                    <option value="">All Employees</option>
+                    @if (Model.Employees != null)
+                    {
+                        foreach (var e in Model.Employees)
+                        {
+                            <option value="@e.EmployeeId" @(selectedEmployeeId == e.EmployeeId ? "selected" : "")>
+                                @e.EmployeeCode - @e.FirstName @e.LastName
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-info-circle"></i> Status</label>
+                <select name="status">
+                    <option value="">All Status</option>
+                    <option value="1" @(selectedStatus == AttendanceStatus.Present ? "selected" : "")>Present</option>
+                    <option value="2" @(selectedStatus == AttendanceStatus.Absent ? "selected" : "")>Absent</option>
+                    <option value="3" @(selectedStatus == AttendanceStatus.Leave ? "selected" : "")>Leave</option>
+                    <option value="4" @(selectedStatus == AttendanceStatus.HalfDay ? "selected" : "")>Half Day</option>
+                    <option value="5" @(selectedStatus == AttendanceStatus.Holiday ? "selected" : "")>Holiday</option>
+                    <option value="6" @(selectedStatus == AttendanceStatus.Weekend ? "selected" : "")>Weekend</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-row-actions">
+            <a href="@Url.Action("FullAttendance", "AttendanceReport")" class="btn-reset">
+                <i class="fas fa-redo"></i> Reset All
+            </a>
+            <button type="submit" class="btn-generate">
+                <i class="fas fa-sync-alt"></i> Generate Report
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- KPI -->
+<div class="kpi-grid">
+    <div class="kpi-card kpi-records">
+        <div class="kpi-icon"><i class="fas fa-database"></i></div>
+        <div class="kpi-value">@Model.TotalRecords</div>
+        <div class="kpi-label">Total Records</div>
+    </div>
+
+    <div class="kpi-card kpi-worked">
+        <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="kpi-value">@Model.TotalWorkedHours.ToString("0.0")</div>
+        <div class="kpi-label">Worked Hours</div>
+    </div>
+
+    <div class="kpi-card kpi-ot">
+        <div class="kpi-icon"><i class="fas fa-business-time"></i></div>
+        <div class="kpi-value">@Model.TotalOvertimeHours.ToString("0.0")</div>
+        <div class="kpi-label">OT Hours</div>
+    </div>
+
+    <div class="kpi-card kpi-less">
+        <div class="kpi-icon"><i class="fas fa-minus-circle"></i></div>
+        <div class="kpi-value">@Model.TotalLessHours.ToString("0.0")</div>
+        <div class="kpi-label">Less Hours</div>
+    </div>
+
+    <div class="kpi-card kpi-present">
+        <div class="kpi-icon"><i class="fas fa-user-check"></i></div>
+        <div class="kpi-value">@totalPresent</div>
+        <div class="kpi-label">Present</div>
+    </div>
+
+    <div class="kpi-card kpi-pct">
+        <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
+        <div class="kpi-value">@attendancePct%</div>
+        <div class="kpi-label">Attendance %</div>
+    </div>
+</div>
+
+<!-- DATA TABLE -->
+<div class="table-card">
+    <div class="table-header">
+        <h3><i class="fas fa-list-alt"></i> Complete Attendance Records</h3>
+        <div class="record-count">
+            <i class="fas fa-database"></i> @Model.Records.Count Records
+        </div>
+    </div>
+
+    @if (Model.Records != null && Model.Records.Any())
+    {
+        <div style="overflow-x: auto; max-height: 600px;">
+            <table class="data-table" id="fullReportTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Employee</th>
+                        <th>Branch</th>
+                        <th>Department</th>
+                        <th>Shift</th>
+                        <th>In</th>
+                        <th>Out</th>
+                        <th>Worked</th>
+                        <th>OT</th>
+                        <th>Less</th>
+                        <th>Late</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int rowNo = 1; }
+                    @foreach (var row in Model.Records)
+                    {
+                        var initial = !string.IsNullOrEmpty(row.EmployeeName) ? row.EmployeeName.Substring(0, 1).ToUpper() : "E";
+                        <tr>
+                            <td>@rowNo</td>
+                            <td>@row.AttendanceDate.ToString("dd MMM yy")</td>
+                            <td>
+                                <div class="emp-mini">
+                                    <span class="emp-avatar">@initial</span>
+                                    <div>
+                                        <span class="emp-name">@row.EmployeeName</span>
+                                        <span class="emp-code">@row.EmployeeCode</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@row.BranchName</td>
+                            <td>@row.DepartmentName</td>
+                            <td>@row.ShiftName</td>
+                            <td>@(row.CheckIn.HasValue ? row.CheckIn.Value.ToString(@"hh\:mm") : "-")</td>
+                            <td>@(row.CheckOut.HasValue ? row.CheckOut.Value.ToString(@"hh\:mm") : "-")</td>
+                            <td>@row.WorkedHours.ToString("0.00")</td>
+                            <td class="text-ot">@row.OvertimeHours.ToString("0.00")</td>
+                            <td class="text-less">@row.LessTimeHours.ToString("0.00")</td>
+                            <td class="text-late">@row.LateMinutes</td>
+                            <td>
+                                @switch (row.Status)
+                                {
+                                    case AttendanceStatus.Present:
+                                        <span class="badge-present">Present</span>
+                                        break;
+                                    case AttendanceStatus.Absent:
+                                        <span class="badge-absent">Absent</span>
+                                        break;
+                                    case AttendanceStatus.Leave:
+                                        <span class="badge-leave">Leave</span>
+                                        break;
+                                    case AttendanceStatus.HalfDay:
+                                        <span class="badge-halfday">Half</span>
+                                        break;
+                                    case AttendanceStatus.Holiday:
+                                        <span class="badge-holiday">Holiday</span>
+                                        break;
+                                    case AttendanceStatus.Weekend:
+                                        <span class="badge-weekend">Weekend</span>
+                                        break;
+                                    default:
+                                        <span style="color:var(--text-muted);">-</span>
+                                        break;
+                                }
+                            </td>
+                        </tr>
+                        rowNo++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+            <i class="fas fa-calendar-times" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px;"></i>
+            <h3>No Records Found</h3>
+            <p>Selected filters ke against koi attendance record nahi mila.</p>
+        </div>
+    }
+</div>
+
+<!-- EXPORT -->
+<div class="export-bar">
+    <div class="export-title">
+        <i class="fas fa-download"></i>
+        <span>Export Report</span>
+    </div>
+    <div class="export-buttons">
+        <button type="button" class="btn-export btn-print" onclick="window.print();">
+            <i class="fas fa-print"></i> Print
+        </button>
+        <button type="button" class="btn-export btn-pdf" id="btnExportPDF">
+            <i class="fas fa-file-pdf"></i> PDF
+        </button>
+        <button type="button" class="btn-export btn-excel" id="btnExportExcel">
+            <i class="fas fa-file-excel"></i> Excel
+        </button>
+        <button type="button" class="btn-export btn-csv" id="btnExportCSV">
+            <i class="fas fa-file-csv"></i> CSV
+        </button>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="~/Scripts/attendance-reports.js"></script>
+}

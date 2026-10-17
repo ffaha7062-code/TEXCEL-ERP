@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
+using TEXCEL_ERP.Data;
+using TEXCEL_ERP.Helpers;
 using TEXCEL_ERP.Models.Entities;
 using TEXCEL_ERP.Models.Identity;
 using TEXCEL_ERP.Models.ViewModels;
@@ -13,7 +16,7 @@ using TEXCEL_ERP.Services;
 namespace TEXCEL_ERP.Controllers
 {
     /// <summary>
-    /// Account controller for authentication.
+    /// Account controller for authentication and user management.
     /// </summary>
     [Authorize]
     public class AccountController : Controller
@@ -52,10 +55,22 @@ namespace TEXCEL_ERP.Controllers
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
-            // ✅ If already logged in, redirect to home
-            if (User.Identity.IsAuthenticated)
+            // ✅ Dono check karein
+            if (User.Identity.IsAuthenticated && SessionHelper.IsAuthenticated)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Dashboard");
+            }
+
+            // ✅ Agar Identity cookie hai lekin SessionHelper NULL hai
+            // Toh session clear karein taake fresh login ho
+            if (User.Identity.IsAuthenticated && !SessionHelper.IsAuthenticated)
+            {
+                // Session clear karo — fresh start
+                try
+                {
+                    AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
+                }
+                catch { }
             }
 
             ViewBag.ReturnUrl = returnUrl;
@@ -75,28 +90,87 @@ namespace TEXCEL_ERP.Controllers
                 return View(model);
             }
 
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
-
-            switch (result)
+            try
             {
-                case SignInStatus.Success:
-                    var user = await UserManager.FindByEmailAsync(model.Email);
-                    if (user != null)
-                    {
-                        user.LastLogin = DateTime.Now;
-                        await UserManager.UpdateAsync(user);
-                    }
-                    return RedirectToLocal(returnUrl);
+                var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
 
-                case SignInStatus.LockedOut:
-                    ModelState.AddModelError("", "Account locked. Please try again after 5 minutes.");
-                    return View(model);
+                switch (result)
+                {
+                    case SignInStatus.Success:
+                        var user = await UserManager.FindByEmailAsync(model.Email);
+                        if (user != null)
+                        {
+                            user.LastLogin = DateTime.Now;
+                            await UserManager.UpdateAsync(user);
 
-                case SignInStatus.Failure:
-                default:
-                    ModelState.AddModelError("", "Invalid email or password.");
-                    return View(model);
+                            var roles = await UserManager.GetRolesAsync(user.Id);
+                            var primaryRole = roles.FirstOrDefault() ?? "Employee";
+
+                            string branchName = null;
+                            if (user.BranchId.HasValue)
+                            {
+                                using (var context = new ApplicationDbContext())
+                                {
+                                    var branch = context.Branches.Find(user.BranchId.Value);
+                                    if (branch != null)
+                                    {
+                                        branchName = branch.BranchName;
+                                    }
+                                }
+                            }
+
+                            SessionHelper.UserId = user.Id;
+                            SessionHelper.UserName = user.Email;
+                            SessionHelper.FullName = user.FullName;
+                            SessionHelper.Role = primaryRole;
+                            SessionHelper.BranchId = user.BranchId;
+                            SessionHelper.BranchName = branchName;
+                            SessionHelper.EmployeeId = user.EmployeeId;
+
+                            HttpContext.Session["LastActivity"] = DateTime.Now;
+                        }
+
+                        return RedirectToLocal(returnUrl);
+
+                    case SignInStatus.LockedOut:
+                        ModelState.AddModelError("", "Account locked. Please try again after 5 minutes.");
+                        return View(model);
+
+                    case SignInStatus.RequiresVerification:
+                        return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = model.RememberMe });
+
+                    case SignInStatus.Failure:
+                    default:
+                        ModelState.AddModelError("", "Invalid email or password.");
+                        return View(model);
+                }
             }
+            catch (Exception ex)
+            {
+                // ✅ TEMPORARY: Asli error screen pe dikhao (debugging ke liye)
+                System.Diagnostics.Debug.WriteLine("LOGIN ERROR: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("STACK: " + ex.StackTrace);
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("INNER: " + ex.InnerException.Message);
+                }
+
+                ModelState.AddModelError("", "DEBUG: " + ex.Message);
+                return View(model);
+            }
+        }
+
+        [AllowAnonymous]
+        public JsonResult CheckSession()
+        {
+            return Json(new
+            {
+                UserId = SessionHelper.UserId,
+                Role = SessionHelper.Role,
+                BranchId = SessionHelper.BranchId,
+                EmployeeId = SessionHelper.EmployeeId,
+                IsAuthenticated = SessionHelper.IsAuthenticated
+            }, JsonRequestBehavior.AllowGet);
         }
 
         // =============================================
@@ -107,7 +181,7 @@ namespace TEXCEL_ERP.Controllers
         {
             if (User.Identity.IsAuthenticated)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Dashboard");
             }
             return View();
         }
@@ -137,9 +211,9 @@ namespace TEXCEL_ERP.Controllers
 
                 if (result.Succeeded)
                 {
-                    await UserManager.AddToRoleAsync(user.Id, "BranchUser");
+                    await UserManager.AddToRoleAsync(user.Id, "Employee");
                     await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Dashboard");
                 }
 
                 AddErrors(result);
@@ -151,11 +225,17 @@ namespace TEXCEL_ERP.Controllers
         // =============================================
         // LOG OFF
         // =============================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public ActionResult LogOff()
         {
+            // OWIN Authentication Sign Out — ASP.NET Identity ke liye ZAROORI
             AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
+
+            // Session clear karo
+            SessionHelper.Clear();
+            Session.Clear();
+            Session.Abandon();
+
+            // Login pe redirect — ReturnUrl NAHI
             return RedirectToAction("Login", "Account");
         }
 
@@ -290,11 +370,19 @@ namespace TEXCEL_ERP.Controllers
 
         private ActionResult RedirectToLocal(string returnUrl)
         {
-            if (Url.IsLocalUrl(returnUrl))
+            // ✅ Block dangerous/loop-creating URLs
+            if (!string.IsNullOrEmpty(returnUrl)
+                && Url.IsLocalUrl(returnUrl)
+                && !returnUrl.Contains("/Account/LogOff")
+                && !returnUrl.Contains("/Account/Login")
+                && !returnUrl.Contains("/Account/Register")
+                && !returnUrl.Contains("/Account/Logout"))
             {
                 return Redirect(returnUrl);
             }
-            return RedirectToAction("Index", "Home");
+
+            // Default: Dashboard
+            return RedirectToAction("Index", "Dashboard");
         }
     }
 }

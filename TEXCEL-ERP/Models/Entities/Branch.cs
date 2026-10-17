@@ -56,6 +56,8 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
+        public bool IsDeleted { get; set; }
+
         // Navigation Properties
         [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; }

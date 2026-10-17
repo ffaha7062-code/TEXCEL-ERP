@@ -15,18 +15,19 @@ namespace TEXCEL_ERP.Models.Entities
         public int AuditLogId { get; set; }
 
         [Display(Name = "User")]
-        public int? UserId { get; set; }
+        public string UserId { get; set; }
 
         [StringLength(100)]
         [Display(Name = "User Name")]
         public string UserName { get; set; }
 
+        // ✅ BranchId — int? hona chahiye
         [Display(Name = "Branch")]
         public int? BranchId { get; set; }
 
         [StringLength(50)]
         [Display(Name = "Action Type")]
-        public string ActionType { get; set; } // Create, Read, Update, Delete, Login, Logout
+        public string ActionType { get; set; }
 
         [StringLength(100)]
         [Display(Name = "Module")]

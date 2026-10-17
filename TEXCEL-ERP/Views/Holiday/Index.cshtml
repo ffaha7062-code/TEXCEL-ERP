@@ -1,0 +1,563 @@
+﻿@model List<TEXCEL_ERP.Models.Entities.Holiday>
+@{
+    ViewBag.Title = "Holidays";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var branches = ViewBag.Branches as List<TEXCEL_ERP.Models.Entities.Branch>;
+    var canModify = ViewBag.CanModify != null && (bool)ViewBag.CanModify;
+    var canDelete = ViewBag.CanDelete != null && (bool)ViewBag.CanDelete;
+}
+
+@section styles {
+    <style>
+
+        /* ============================================= */
+        /* PAGE HEADER — Compact Pink Theme              */
+        /* ============================================= */
+        .page-header-holiday {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.30);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .page-header-holiday-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-header-holiday .header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .page-header-holiday h1 {
+            font-size: 20px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            color: white;
+        }
+
+        .page-header-holiday p {
+            font-size: 12px;
+            margin: 4px 0 0 0;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Back Button */
+        .page-back-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+            .page-back-btn:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.60);
+                color: white;
+                text-decoration: none;
+                transform: translateX(-4px);
+            }
+
+        /* Add Holiday Button (smaller, in header) */
+        .btn-add-holiday {
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1.5px solid rgba(255, 255, 255, 0.40);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+            .btn-add-holiday:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.65);
+            }
+
+        /* Pink buttons override */
+        .btn-save {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899) !important;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35) !important;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+            .page-header h1 {
+                font-size: 28px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: var(--text-primary);
+            }
+
+                .page-header h1 i {
+                    color: var(--gold);
+                    margin-right: 10px;
+                }
+
+        .btn-add {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(108, 60, 176, 0.30);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+            .table-card table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .table-card thead {
+                background: rgba(108, 60, 176, 0.05);
+            }
+
+            .table-card th {
+                padding: 14px 18px;
+                text-align: left;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .table-card td {
+                padding: 14px 18px;
+                font-size: 13px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+        .badge-active {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .badge-inactive {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-body);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+            font-size: 13px;
+        }
+
+            .action-btn:hover {
+                background: rgba(108, 60, 176, 0.10);
+                color: #8b5cf6;
+                border-color: #8b5cf6;
+            }
+
+            .action-btn.delete-btn:hover {
+                background: rgba(239, 68, 68, 0.10);
+                color: #ef4444;
+                border-color: #ef4444;
+            }
+
+        /* Modal */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 20, 0.85);
+            z-index: 99999;
+            padding: 100px 16px;
+            overflow-y: auto;
+        }
+
+            .modal-bg.show {
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+            }
+
+        .modal-box {
+            background: #ffffff;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 520px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.40);
+        }
+
+        [data-theme="dark"] .modal-box {
+            background: #1a1a2e;
+        }
+
+        .modal-top {
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+            .modal-top h3 {
+                margin: 0;
+                font-size: 15px;
+                font-weight: 700;
+            }
+
+            .modal-top button {
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                width: 28px;
+                height: 28px;
+                border-radius: 7px;
+                cursor: pointer;
+            }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+            .form-group label {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+            }
+
+            .form-group input, .form-group select, .form-group textarea {
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+            }
+
+        .modal-actions {
+            padding: 14px 20px;
+            background: rgba(240, 242, 245, 0.7);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-cancel {
+            padding: 9px 18px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            padding: 9px 18px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Toast */
+        #toastContainer {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.20);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+            pointer-events: auto;
+        }
+
+        [data-theme="dark"] .toast {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .toast-success {
+            border-left: 4px solid #10b981;
+        }
+
+            .toast-success i {
+                color: #10b981;
+            }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+            .toast-error i {
+                color: #ef4444;
+            }
+
+        .toast-hide {
+            animation: toastOut 0.3s forwards;
+        }
+    </style>
+}
+
+<div id="toastContainer"></div>
+
+<div class="page-header-holiday">
+    <div class="page-header-holiday-left">
+        <a href="@Url.Action("Index", "Attendance")" class="page-back-btn" title="Back to Attendance">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="header-icon">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div>
+            <h1>Holidays</h1>
+            <p>Manage branch-wise holidays and public holidays</p>
+        </div>
+    </div>
+    @if (canModify)
+    {
+        <button type="button" class="btn-add-holiday" id="openModalBtn">
+            <i class="fas fa-plus"></i> Add New Holiday
+        </button>
+    }
+</div>
+
+<div class="table-card">
+    @if (Model != null && Model.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Holiday Name</th>
+                    <th>Branch</th>
+                    <th>Paid</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in Model)
+                {
+                    <tr>
+                        <td><strong>@h.HolidayDate.ToString("dd MMM yyyy")</strong></td>
+                        <td>@h.HolidayName</td>
+                        <td>@(h.Branch != null ? h.Branch.BranchName : "-")</td>
+                        <td>
+                            @if (h.IsPaid)
+                            {
+                                <span style="color:#10b981; font-weight:600;">Yes</span>
+                            }
+                            else
+                            {
+                                <span style="color:#ef4444; font-weight:600;">No</span>
+                            }
+                        </td>
+                        <td>
+                            @if (h.IsActive)
+                            {
+                                <span class="badge-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td style="text-align:right;">
+                            @if (canModify)
+                            {
+                                <button type="button" class="action-btn edit-btn" data-id="@h.HolidayId" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="action-btn toggle-btn" data-id="@h.HolidayId" title="Toggle">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                            }
+                            @if (canDelete)
+                            {
+                                <button type="button" class="action-btn delete-btn" data-id="@h.HolidayId" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+            <i class="fas fa-calendar-alt" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px;"></i>
+            <h3>No Holidays Found</h3>
+            <p>Click "Add New Holiday" to create one.</p>
+        </div>
+    }
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="holidayModal">
+    <div class="modal-box">
+        <div class="modal-top">
+            <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> Add Holiday</h3>
+            <button type="button" id="closeModalBtn"><i class="fas fa-times"></i></button>
+        </div>
+
+        <form id="holidayForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="HolidayId" id="HolidayId" value="0" />
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Branch *</label>
+                    <select name="BranchId" id="BranchId" required>
+                        <option value="">-- Select Branch --</option>
+                        @if (branches != null)
+                        {
+                            foreach (var b in branches)
+                            {
+                                <option value="@b.BranchId">@b.BranchName</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Holiday Name *</label>
+                    <input type="text" name="HolidayName" id="HolidayName" required maxlength="100" />
+                </div>
+
+                <div class="form-group">
+                    <label>Holiday Date *</label>
+                    <input type="date" name="HolidayDate" id="HolidayDate" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="Description" id="Description" rows="2" maxlength="500"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; text-transform:none;">
+                        <input type="checkbox" name="IsPaid" id="IsPaid" value="true" checked />
+                        <span>Paid Holiday</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-save" id="saveBtn">
+                    <i class="fas fa-save"></i> <span id="submitBtnText">Save Holiday</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/holiday.js"></script>
+}

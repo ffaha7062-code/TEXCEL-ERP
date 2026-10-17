@@ -38,6 +38,16 @@ namespace TEXCEL_ERP.Models.Entities
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; } = true;
 
+        // ✅ NEW FIELDS
+        [Display(Name = "Is System Head")]
+        public bool IsSystemHead { get; set; } = false;
+
+        [Display(Name = "Is Statutory")]
+        public bool IsStatutory { get; set; } = false;
+
+        [Display(Name = "Is Deduction")]
+        public bool IsDeduction { get; set; } = false;
+
         [Display(Name = "Display Order")]
         public int DisplayOrder { get; set; } = 0;
 

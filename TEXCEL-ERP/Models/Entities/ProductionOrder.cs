@@ -21,6 +21,13 @@ namespace TEXCEL_ERP.Models.Entities
         public string OrderNumber { get; set; }
 
         [Required]
+        [Display(Name = "Branch")]
+        public int BranchId { get; set; }
+
+        [ForeignKey("BranchId")]
+        public virtual Branch Branch { get; set; }
+
+        [Required]
         [Display(Name = "Production Plan")]
         public int ProductionPlanId { get; set; }
 

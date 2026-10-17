@@ -1,0 +1,49 @@
+﻿@{
+    var currentAction = ViewContext.RouteData.Values["action"] != null
+        ? ViewContext.RouteData.Values["action"].ToString()
+        : "";
+
+    string ActiveClass(string action)
+    {
+        return currentAction.Equals(action, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    }
+}
+
+<div class="report-subnav">
+
+    <a href="@Url.Action("Index", "AttendanceReport")" class="report-nav-item nav-hub @ActiveClass("Index")">
+        <i class="fas fa-home"></i>
+        <span>Hub</span>
+    </a>
+
+    <a href="@Url.Action("Daily", "AttendanceReport")" class="report-nav-item nav-daily @ActiveClass("Daily")">
+        <i class="fas fa-calendar-day"></i>
+        <span>Daily</span>
+    </a>
+
+    <a href="@Url.Action("Monthly", "AttendanceReport")" class="report-nav-item nav-monthly @ActiveClass("Monthly")">
+        <i class="fas fa-calendar-check"></i>
+        <span>Monthly</span>
+    </a>
+
+    <a href="@Url.Action("LateOT", "AttendanceReport")" class="report-nav-item nav-lateot @ActiveClass("LateOT")">
+        <i class="fas fa-clock"></i>
+        <span>Late &amp; OT</span>
+    </a>
+
+    <a href="@Url.Action("Department", "AttendanceReport")" class="report-nav-item nav-dept @ActiveClass("Department")">
+        <i class="fas fa-sitemap"></i>
+        <span>Department</span>
+    </a>
+
+    <a href="@Url.Action("Graphs", "AttendanceReport")" class="report-nav-item nav-graph @ActiveClass("Graphs")">
+        <i class="fas fa-chart-line"></i>
+        <span>Graphs</span>
+    </a>
+
+    <a href="@Url.Action("FullAttendance", "AttendanceReport")" class="report-nav-item nav-full @ActiveClass("FullAttendance")">
+        <i class="fas fa-list-alt"></i>
+        <span>Full</span>
+    </a>
+
+</div>

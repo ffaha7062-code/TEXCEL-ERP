@@ -11,9 +11,11 @@ namespace TEXCEL_ERP.Controllers
 {
     /// <summary>
     /// Company controller for Company settings.
+    /// Sirf SuperAdmin access kar sakta hai.
     /// </summary>
-    [SessionTimeout]
-    public class CompanyController : Controller
+    [RoleAuthorize("SuperAdmin")]       // ✅ Sirf SuperAdmin
+    [BranchAuthorize]                    // ✅ Session + Branch check
+    public class CompanyController : BaseController
     {
         private readonly ICompanyService _companyService;
 
@@ -29,7 +31,7 @@ namespace TEXCEL_ERP.Controllers
         {
             var company = _companyService.GetCompany();
 
-            // ✅ Agar company exist nahi karti toh empty ViewModel bhejein
+            // Agar company exist nahi karti toh empty ViewModel bhejein
             if (company == null)
             {
                 return View(new CompanyViewModel());
@@ -60,11 +62,18 @@ namespace TEXCEL_ERP.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Index(CompanyViewModel model)
         {
+            // ✅ Double check (attribute ke saath)
+            if (!CanModify)
+            {
+                TempData["Error"] = "You don't have permission to modify company settings.";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 var company = _companyService.GetCompany();
 
-                // ✅ Agar company exist nahi karti toh NAYI create karein
+                // Agar company exist nahi karti toh NAYI create karein
                 if (company == null)
                 {
                     company = new Company

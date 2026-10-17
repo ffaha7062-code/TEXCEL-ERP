@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using TEXCEL_ERP.Helpers
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -108,7 +109,6 @@
         /* ============================================= */
         .top-navbar {
             background: var(--bg-navbar);
-            /*backdrop-filter: blur(24px);*/
             padding: 0 36px;
             height: var(--nav-height);
             display: flex;
@@ -288,7 +288,6 @@
                     font-size: 14px;
                 }
 
-            /* Dropdown arrow */
             .nav-links .has-dropdown > .nav-link::after {
                 content: '\f107';
                 font-family: 'Font Awesome 6 Free';
@@ -303,7 +302,6 @@
                 transform: rotate(180deg);
             }
 
-            /* Dropdown Menu */
             .nav-links .dropdown-menu {
                 position: absolute;
                 top: 100%;
@@ -571,89 +569,6 @@
                     background: rgba(239, 68, 68, 0.08);
                     color: #ef4444;
                 }
-        /* ===== SETTINGS WRAPPER ===== */
-        .settings-wrapper {
-            position: relative;
-        }
-
-        /* ===== SETTINGS DROPDOWN ===== */
-        .settings-dropdown {
-            position: absolute;
-            top: calc(100% + 12px);
-            right: 0;
-            min-width: 240px;
-            background: var(--bg-card);
-            backdrop-filter: blur(24px);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 16px 48px rgba(108, 60, 176, 0.20);
-            padding: 8px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 100;
-        }
-
-            .settings-dropdown.open {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-
-        .settings-dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px 6px 12px;
-        }
-
-            .settings-dropdown-header i {
-                font-size: 16px;
-                color: var(--primary-light);
-            }
-
-            .settings-dropdown-header h4 {
-                font-size: 13px;
-                font-weight: 700;
-                color: var(--text-primary);
-                margin: 0;
-                font-family: 'Space Grotesk', sans-serif;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-        .settings-dropdown-divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 6px 8px;
-        }
-
-        .settings-dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-            .settings-dropdown-item:hover {
-                background: rgba(108, 60, 176, 0.08);
-                color: var(--primary-light);
-                padding-left: 18px;
-            }
-
-            .settings-dropdown-item i {
-                font-size: 14px;
-                width: 18px;
-                text-align: center;
-                color: var(--primary-light);
-            }
 
         /* ============================================= */
         /* MOBILE TOGGLE                                 */
@@ -678,8 +593,6 @@
             position: relative;
             z-index: 1;
         }
-
-       
 
         /* ============================================= */
         /* FOOTER                                        */
@@ -709,6 +622,10 @@
                 font-weight: 600;
             }
 
+        /* ============================================= */
+        /* MODAL OPEN STATE — Navbar/Footer Blur          */
+        /* ============================================= */
+      
         /* ============================================= */
         /* RESPONSIVE                                    */
         /* ============================================= */
@@ -813,29 +730,302 @@
                     font-size: 20px;
                 }
         }
+
         /* ============================================= */
-        /* MODAL OPEN STATE — Navbar/Footer Blur          */
+        /* MODAL OPEN STATE — Footer/Content Blur        */
         /* ============================================= */
-        body.modal-open {
-            overflow: hidden;
+        /* ✅ Footer — modal ke waqt hide */
+        body.modal-open .footer {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: -1 !important;
         }
 
-            body.modal-open .top-navbar,
-            body.modal-open .footer,
-            body.modal-open .page-content {
-                filter: blur(8px);
-                pointer-events: none;
-                user-select: none;
-                transition: filter 0.3s ease;
+        /* ✅ Navbar — z-index neeche */
+        body.modal-open .top-navbar {
+            z-index: 1 !important;
+        }
+
+        /* ✅ Modal — hamesha upar */
+        body.modal-open .modal-bg,
+        body.modal-open .modal-box {
+            filter: none !important;
+            pointer-events: auto !important;
+            z-index: 2147483647 !important;
+        }
+
+        /* ============================================= */
+        /* TOAST NOTIFICATIONS — GLOBAL                   */
+        /* ============================================= */
+        #toastContainer {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.20);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+            max-width: 400px;
+            pointer-events: auto;
+            border-left: 4px solid #8b5cf6;
+            animation: toastIn 0.3s ease;
+        }
+
+        [data-theme="dark"] .toast {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .toast-success {
+            border-left-color: #10b981;
+        }
+
+            .toast-success i {
+                color: #10b981;
             }
 
-            body.modal-open .top-navbar {
-                z-index: 1 !important;
+        .toast-error {
+            border-left-color: #ef4444;
+        }
+
+            .toast-error i {
+                color: #ef4444;
             }
 
-            body.modal-open .footer {
-                z-index: 1 !important;
+        .toast-info {
+            border-left-color: #8b5cf6;
+        }
+
+            .toast-info i {
+                color: #8b5cf6;
             }
+
+        @@keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+
+        /* ============================================= */
+        /* REPORT SUB-NAVIGATION — Multi-Color Outline   */
+        /* ============================================= */
+        .report-subnav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            flex-wrap: wrap;
+        }
+
+            .report-subnav .report-nav-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 7px 14px;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 700;
+                text-decoration: none;
+                transition: all 0.25s ease;
+                font-family: 'Inter', sans-serif;
+                white-space: nowrap;
+                background: transparent;
+                border: 1.5px solid;
+            }
+
+                .report-subnav .report-nav-item i {
+                    font-size: 12px;
+                    transition: transform 0.25s;
+                }
+
+                .report-subnav .report-nav-item:hover {
+                    text-decoration: none;
+                    transform: translateY(-1px);
+                }
+
+                    .report-subnav .report-nav-item:hover i {
+                        transform: scale(1.15);
+                    }
+
+                /* Active state — filled with color */
+                .report-subnav .report-nav-item.active {
+                    color: white !important;
+                }
+
+            /* ============================================= */
+            /* 1. HUB — Slate Blue                           */
+            /* ============================================= */
+            .report-subnav .nav-hub {
+                border-color: #475569;
+                color: #475569;
+            }
+
+                .report-subnav .nav-hub:hover {
+                    background: rgba(71, 85, 105, 0.10);
+                }
+
+                .report-subnav .nav-hub.active {
+                    background: #475569;
+                    border-color: #475569;
+                    box-shadow: 0 4px 12px rgba(71, 85, 105, 0.30);
+                }
+
+            /* ============================================= */
+            /* 2. DAILY — Coral                              */
+            /* ============================================= */
+            .report-subnav .nav-daily {
+                border-color: #ff6b6b;
+                color: #ff6b6b;
+            }
+
+                .report-subnav .nav-daily:hover {
+                    background: rgba(255, 107, 107, 0.10);
+                }
+
+                .report-subnav .nav-daily.active {
+                    background: #ff6b6b;
+                    border-color: #ff6b6b;
+                    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.35);
+                }
+
+            /* ============================================= */
+            /* 3. MONTHLY — Light Burgundy                   */
+            /* ============================================= */
+            .report-subnav .nav-monthly {
+                border-color: #a1556d;
+                color: #a1556d;
+            }
+
+                .report-subnav .nav-monthly:hover {
+                    background: rgba(161, 85, 109, 0.10);
+                }
+
+                .report-subnav .nav-monthly.active {
+                    background: #a1556d;
+                    border-color: #a1556d;
+                    box-shadow: 0 4px 12px rgba(161, 85, 109, 0.35);
+                }
+
+            /* ============================================= */
+            /* 4. LATE & OT — Amber/Brown                    */
+            /* ============================================= */
+            .report-subnav .nav-lateot {
+                border-color: #b45309;
+                color: #b45309;
+            }
+
+                .report-subnav .nav-lateot:hover {
+                    background: rgba(180, 83, 9, 0.10);
+                }
+
+                .report-subnav .nav-lateot.active {
+                    background: #b45309;
+                    border-color: #b45309;
+                    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.35);
+                }
+
+            /* ============================================= */
+            /* 5. DEPARTMENT — Forest Green                  */
+            /* ============================================= */
+            .report-subnav .nav-dept {
+                border-color: #059669;
+                color: #059669;
+            }
+
+                .report-subnav .nav-dept:hover {
+                    background: rgba(5, 150, 105, 0.10);
+                }
+
+                .report-subnav .nav-dept.active {
+                    background: #059669;
+                    border-color: #059669;
+                    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+                }
+
+            /* ============================================= */
+            /* 6. GRAPHS — Plum/Purple                       */
+            /* ============================================= */
+            .report-subnav .nav-graph {
+                border-color: #7c3aed;
+                color: #7c3aed;
+            }
+
+                .report-subnav .nav-graph:hover {
+                    background: rgba(124, 58, 237, 0.10);
+                }
+
+                .report-subnav .nav-graph.active {
+                    background: #7c3aed;
+                    border-color: #7c3aed;
+                    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+                }
+
+            /* ============================================= */
+            /* 7. FULL — Teal                                */
+            /* ============================================= */
+            .report-subnav .nav-full {
+                border-color: #0d9488;
+                color: #0d9488;
+            }
+
+                .report-subnav .nav-full:hover {
+                    background: rgba(13, 148, 136, 0.10);
+                }
+
+                .report-subnav .nav-full.active {
+                    background: #0d9488;
+                    border-color: #0d9488;
+                    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+                }
+
+        /* Mobile */
+        @@media (max-width: 700px) {
+            .report-subnav {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 4px;
+            }
+
+                .report-subnav .report-nav-item span {
+                    display: none;
+                }
+
+                .report-subnav .report-nav-item {
+                    padding: 7px 12px;
+                }
+        }
+
+
+
+
     </style>
     @RenderSection("styles", required: false)
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -862,87 +1052,125 @@
             <i class="fas fa-bars"></i>
         </button>
 
+        <!-- NAV LINKS — Role-Based Menu -->
         <ul class="nav-links" id="navLinks">
 
-            <!-- Dashboard -->
+            <!-- Dashboard (Always Visible) -->
             <li class="nav-item">
                 <a href="@Url.Action("Index", "Dashboard")" class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Dashboard" ? "active" : "")">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
             </li>
 
-            <!-- HR MODULE -->
-            <li class="nav-item has-dropdown">
-                <a href="javascript:void(0);" class="nav-link">
-                    <i class="fas fa-users"></i> HR
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="@Url.Action("Index", "Employee")"><i class="fas fa-user-tie"></i> Employees</a></li>
-                    <li><a href="@Url.Action("Index", "Department")"><i class="fas fa-sitemap"></i> Departments</a></li>
-                    <li><a href="@Url.Action("Index", "Designation")"><i class="fas fa-id-badge"></i> Designations</a></li>
-                    <li><a href="@Url.Action("Index", "Shift")"><i class="fas fa-clock"></i> Shifts</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li><a href="@Url.Action("Index", "Attendance")"><i class="fas fa-calendar-check"></i> Attendance</a></li>
-                    <li><a href="@Url.Action("Index", "Leave")"><i class="fas fa-plane-departure"></i> Leaves</a></li>
-                    <li><a href="@Url.Action("Index", "Payroll")"><i class="fas fa-wallet"></i> Payroll</a></li>
-                </ul>
-            </li>
-
-            <!-- INVENTORY MODULE -->
-            <li class="nav-item has-dropdown">
-                <a href="javascript:void(0);" class="nav-link">
-                    <i class="fas fa-boxes"></i> Inventory
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="@Url.Action("Index", "Fabric")"><i class="fas fa-layer-group"></i> Fabrics</a></li>
-                    <li><a href="@Url.Action("Index", "Supplier")"><i class="fas fa-truck"></i> Suppliers</a></li>
-                    <li><a href="@Url.Action("Index", "Purchase")"><i class="fas fa-shopping-cart"></i> Purchase Orders</a></li>
-                    <li><a href="@Url.Action("GRN", "Fabric")"><i class="fas fa-dolly"></i> GRN</a></li>
-                    <li><a href="@Url.Action("Stock", "Fabric")"><i class="fas fa-warehouse"></i> Stock Status</a></li>
-                </ul>
-            </li>
-
-            <!-- PRODUCTION MODULE -->
-            <li class="nav-item has-dropdown">
-                <a href="javascript:void(0);" class="nav-link">
-                    <i class="fas fa-cogs"></i> Production
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="@Url.Action("Index", "Production")"><i class="fas fa-clipboard-list"></i> Production Plans</a></li>
-                    <li><a href="@Url.Action("Cutting", "Production")"><i class="fas fa-cut"></i> Cutting</a></li>
-                    <li><a href="@Url.Action("Sewing", "Production")"><i class="fas fa-tshirt"></i> Sewing</a></li>
-                    <li><a href="@Url.Action("Finishing", "Production")"><i class="fas fa-check-double"></i> Finishing</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li><a href="@Url.Action("Index", "Quality")"><i class="fas fa-award"></i> Quality Control</a></li>
-                </ul>
-            </li>
-
-            <!-- SALES MODULE -->
-            <li class="nav-item has-dropdown">
-                <a href="javascript:void(0);" class="nav-link">
-                    <i class="fas fa-chart-line"></i> Sales
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="@Url.Action("Index", "Customer")"><i class="fas fa-user-friends"></i> Customers</a></li>
-                    <li><a href="@Url.Action("Index", "Sales")"><i class="fas fa-file-invoice"></i> Sales Orders</a></li>
-                    <li><a href="@Url.Action("Invoice", "Sales")"><i class="fas fa-receipt"></i> Invoices</a></li>
-                    <li><a href="@Url.Action("Dispatch", "Sales")"><i class="fas fa-shipping-fast"></i> Dispatch</a></li>
-                </ul>
-            </li>
-
-            <!-- ANALYTICS -->
-            <li class="nav-item">
-                <a href="@Url.Action("Index", "Report")" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Analytics
-                </a>
-            </li>
-
-            <!-- ✅ BRANCHES DROPDOWN (SuperAdmin Only) — Branches + Users + Company -->
-            @if (User.IsInRole("SuperAdmin"))
+            <!-- HR MODULE (SuperAdmin, BranchAdmin, Manager) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.IsSuperAdmin
+              || TEXCEL_ERP.Helpers.SessionHelper.IsBranchAdmin
+              || TEXCEL_ERP.Helpers.SessionHelper.IsManager)
             {
                 <li class="nav-item has-dropdown">
                     <a href="javascript:void(0);" class="nav-link">
-                        <i class="fas fa-building"></i> Branches
+                        <i class="fas fa-users"></i> HR
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="@Url.Action("Index", "Employee")"><i class="fas fa-user-tie"></i> Employees</a></li>
+                        <li><a href="@Url.Action("Index", "Department")"><i class="fas fa-sitemap"></i> Departments</a></li>
+                        <li><a href="@Url.Action("Index", "Designation")"><i class="fas fa-id-badge"></i> Designations</a></li>
+                        <li><a href="@Url.Action("Index", "Shift")"><i class="fas fa-clock"></i> Shifts</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a href="@Url.Action("Index", "Attendance")"><i class="fas fa-calendar-check"></i> Attendance</a></li>
+                        <li><a href="@Url.Action("Index", "Leave")"><i class="fas fa-plane-departure"></i> Leaves</a></li>
+                        <li><a href="@Url.Action("Index", "Payroll")"><i class="fas fa-wallet"></i> Payroll</a></li>
+                    </ul>
+                </li>
+            }
+
+            <!-- My Profile (Employee Only) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.IsEmployee && TEXCEL_ERP.Helpers.SessionHelper.EmployeeId.HasValue)
+            {
+                <li class="nav-item">
+                    <a href="@Url.Action("Details", "Employee", new { id = TEXCEL_ERP.Helpers.SessionHelper.EmployeeId })" class="nav-link">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="@Url.Action("MyAttendance", "Attendance")" class="nav-link">
+                        <i class="fas fa-calendar-check"></i> My Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="@Url.Action("MyPayslip", "Payroll")" class="nav-link">
+                        <i class="fas fa-wallet"></i> My Salary
+                    </a>
+                </li>
+            }
+
+            <!-- INVENTORY MODULE (Admin, Manager) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.CanEdit)
+            {
+                <li class="nav-item has-dropdown">
+                    <a href="javascript:void(0);" class="nav-link">
+                        <i class="fas fa-boxes"></i> Inventory
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="@Url.Action("Index", "Fabric")"><i class="fas fa-layer-group"></i> Fabrics</a></li>
+                        <li><a href="@Url.Action("Index", "Supplier")"><i class="fas fa-truck"></i> Suppliers</a></li>
+                        <li><a href="@Url.Action("Index", "Purchase")"><i class="fas fa-shopping-cart"></i> Purchase Orders</a></li>
+                        <li><a href="@Url.Action("GRN", "Fabric")"><i class="fas fa-dolly"></i> GRN</a></li>
+                        <li><a href="@Url.Action("Stock", "Fabric")"><i class="fas fa-warehouse"></i> Stock Status</a></li>
+                    </ul>
+                </li>
+            }
+
+            <!-- PRODUCTION MODULE (Admin, Manager) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.CanEdit)
+            {
+                <li class="nav-item has-dropdown">
+                    <a href="javascript:void(0);" class="nav-link">
+                        <i class="fas fa-cogs"></i> Production
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="@Url.Action("Index", "Production")"><i class="fas fa-clipboard-list"></i> Production Plans</a></li>
+                        <li><a href="@Url.Action("Cutting", "Production")"><i class="fas fa-cut"></i> Cutting</a></li>
+                        <li><a href="@Url.Action("Sewing", "Production")"><i class="fas fa-tshirt"></i> Sewing</a></li>
+                        <li><a href="@Url.Action("Finishing", "Production")"><i class="fas fa-check-double"></i> Finishing</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a href="@Url.Action("Index", "Quality")"><i class="fas fa-award"></i> Quality Control</a></li>
+                    </ul>
+                </li>
+            }
+
+            <!-- SALES MODULE (Admin, Manager) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.CanEdit)
+            {
+                <li class="nav-item has-dropdown">
+                    <a href="javascript:void(0);" class="nav-link">
+                        <i class="fas fa-chart-line"></i> Sales
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="@Url.Action("Index", "Customer")"><i class="fas fa-user-friends"></i> Customers</a></li>
+                        <li><a href="@Url.Action("Index", "Sales")"><i class="fas fa-file-invoice"></i> Sales Orders</a></li>
+                        <li><a href="@Url.Action("Invoice", "Sales")"><i class="fas fa-receipt"></i> Invoices</a></li>
+                        <li><a href="@Url.Action("Dispatch", "Sales")"><i class="fas fa-shipping-fast"></i> Dispatch</a></li>
+                    </ul>
+                </li>
+            }
+
+            <!-- ANALYTICS (Admin, Manager) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.CanEdit)
+            {
+                <li class="nav-item">
+                    <a href="@Url.Action("Index", "Report")" class="nav-link">
+                        <i class="fas fa-chart-bar"></i> Analytics
+                    </a>
+                </li>
+            }
+
+            <!-- ADMIN DROPDOWN (SuperAdmin Only) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.IsSuperAdmin)
+            {
+                <li class="nav-item has-dropdown">
+                    <a href="javascript:void(0);" class="nav-link">
+                        <i class="fas fa-building"></i> Admin
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="@Url.Action("Index", "Branch")"><i class="fas fa-building"></i> Branches</a></li>
@@ -952,19 +1180,22 @@
                 </li>
             }
 
-            <!-- ✅ SETTINGS DROPDOWN (Only Settings Related) -->
-            <li class="nav-item has-dropdown">
-                <a href="javascript:void(0);" class="nav-link">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
-                <ul class="dropdown-menu" style="right:0; left:auto;">
-                    <li><a href="@Url.Action("Index", "Settings")"><i class="fas fa-sliders-h"></i> General Settings</a></li>
-                    <li><a href="@Url.Action("Index", "Settings")"><i class="fas fa-bell"></i> Notifications</a></li>
-                    <li><a href="@Url.Action("ChangePassword", "Account")"><i class="fas fa-key"></i> Change Password</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li><a href="@Url.Action("Index", "Help")"><i class="fas fa-question-circle"></i> Help & Support</a></li>
-                </ul>
-            </li>
+            <!-- SETTINGS (Admin Only) -->
+            @if (TEXCEL_ERP.Helpers.SessionHelper.IsAdmin)
+            {
+                <li class="nav-item has-dropdown">
+                    <a href="javascript:void(0);" class="nav-link">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                    <ul class="dropdown-menu" style="right:0; left:auto;">
+                        <li><a href="@Url.Action("Index", "Settings")"><i class="fas fa-sliders-h"></i> General Settings</a></li>
+                        <li><a href="@Url.Action("Index", "Settings")"><i class="fas fa-bell"></i> Notifications</a></li>
+                        <li><a href="@Url.Action("ChangePassword", "Account")"><i class="fas fa-key"></i> Change Password</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a href="@Url.Action("Index", "Help")"><i class="fas fa-question-circle"></i> Help &amp; Support</a></li>
+                    </ul>
+                </li>
+            }
 
         </ul>
 
@@ -973,25 +1204,43 @@
                 <i class="fas fa-moon" id="themeIcon"></i>
             </button>
 
-           
+            @{
+                // =============================================
+                // NULL-SAFE USER INFO — Ek hi jagah declare
+                // =============================================
+                var displayName = !string.IsNullOrWhiteSpace(SessionHelper.FullName)
+                    ? SessionHelper.FullName
+                    : (!string.IsNullOrWhiteSpace(User.Identity.Name) ? User.Identity.Name : "Guest");
+
+                var displayRole = !string.IsNullOrWhiteSpace(SessionHelper.Role)
+                    ? SessionHelper.Role
+                    : "User";
+
+                var avatarLetter = !string.IsNullOrWhiteSpace(displayName)
+                    ? displayName.Substring(0, 1).ToUpper()
+                    : "U";
+            }
+
             <!-- User Avatar with Dropdown -->
             <div class="user-profile-wrapper">
-                <a href="javascript:void(0);" class="user-avatar-btn" id="userProfileBtn" title="@(User.Identity.Name ?? "User")">
-                    @(User.Identity.Name != null ? User.Identity.Name.Substring(0, 1).ToUpper() : "U")
+                <a href="javascript:void(0);" class="user-avatar-btn" id="userProfileBtn" title="@displayName">
+                    @avatarLetter
                 </a>
 
                 <!-- User Dropdown -->
                 <div class="user-dropdown" id="userDropdown">
                     <div class="user-dropdown-header">
                         <div class="user-avatar-lg">
-                            @(User.Identity.Name != null ? User.Identity.Name.Substring(0, 1).ToUpper() : "U")
+                            @avatarLetter
                         </div>
                         <div class="user-dropdown-info">
-                            <h4>@(User.Identity.Name ?? "User")</h4>
-                            <p>@(Session["Role"] ?? "User")</p>
+                            <h4>@displayName</h4>
+                            <p>@displayRole</p>
                         </div>
                     </div>
+
                     <div class="user-dropdown-divider"></div>
+
                     <a href="@Url.Action("ChangePassword", "Account")" class="user-dropdown-item">
                         <i class="fas fa-key"></i> Change Password
                     </a>
@@ -999,9 +1248,11 @@
                         <i class="fas fa-cog"></i> Settings
                     </a>
                     <a href="@Url.Action("Index", "Help")" class="user-dropdown-item">
-                        <i class="fas fa-question-circle"></i> Help & Support
+                        <i class="fas fa-question-circle"></i> Help &amp; Support
                     </a>
+
                     <div class="user-dropdown-divider"></div>
+
                     @using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { @id = "logoutForm" }))
                     {
                         @Html.AntiForgeryToken()
@@ -1034,6 +1285,7 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="~/Scripts/dashboard.js"></script>
+    <script src="~/Scripts/common.js"></script>
 
     @RenderSection("scripts", required: false)
 

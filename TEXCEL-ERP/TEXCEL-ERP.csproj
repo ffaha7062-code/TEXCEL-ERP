@@ -92,6 +92,9 @@
     <Reference Include="Microsoft.Owin.Security.OAuth, Version=4.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.Security.OAuth.4.2.3\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json.Bson, Version=1.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.Bson.1.0.3\lib\net45\Newtonsoft.Json.Bson.dll</HintPath>
     </Reference>
@@ -175,9 +178,6 @@
       <Private>True</Private>
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="Unity.Abstractions, Version=5.11.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
       <HintPath>..\packages\Unity.Abstractions.5.11.1\lib\net47\Unity.Abstractions.dll</HintPath>
     </Reference>
@@ -214,11 +214,18 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\UnityConfig.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\AttendanceController.cs" />
+    <Compile Include="Controllers\AttendanceReportController.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\BranchController.cs" />
     <Compile Include="Controllers\CompanyController.cs" />
     <Compile Include="Controllers\DashboardController.cs" />
     <Compile Include="Controllers\DepartmentController.cs" />
+    <Compile Include="Controllers\DesignationController.cs" />
+    <Compile Include="Controllers\EmployeeController.cs" />
+    <Compile Include="Controllers\HolidayController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\ShiftController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Data\ApplicationDbContext.cs" />
     <Compile Include="Data\Repository\IRepository.cs" />
@@ -248,7 +255,45 @@
     <Compile Include="Migrations\202609271547245_InitialCreate.Designer.cs">
       <DependentUpon>202609271547245_InitialCreate.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202609292332305_AddShiftTypeAndLateAllowance.cs" />
+    <Compile Include="Migrations\202609292332305_AddShiftTypeAndLateAllowance.Designer.cs">
+      <DependentUpon>202609292332305_AddShiftTypeAndLateAllowance.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202609300108295_AddEmployeeAdvancedFields.cs" />
+    <Compile Include="Migrations\202609300108295_AddEmployeeAdvancedFields.Designer.cs">
+      <DependentUpon>202609300108295_AddEmployeeAdvancedFields.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610020059341_FixAuditLogAndSessionTypes.cs" />
+    <Compile Include="Migrations\202610020059341_FixAuditLogAndSessionTypes.Designer.cs">
+      <DependentUpon>202610020059341_FixAuditLogAndSessionTypes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610060331162_Add_IsDeleted_To_Branch.cs" />
+    <Compile Include="Migrations\202610060331162_Add_IsDeleted_To_Branch.Designer.cs">
+      <DependentUpon>202610060331162_Add_IsDeleted_To_Branch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610070018544_Add_BranchId_To_Shift.cs" />
+    <Compile Include="Migrations\202610070018544_Add_BranchId_To_Shift.Designer.cs">
+      <DependentUpon>202610070018544_Add_BranchId_To_Shift.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610110011291_Increase_EmployeeCode_Length.cs" />
+    <Compile Include="Migrations\202610110011291_Increase_EmployeeCode_Length.Designer.cs">
+      <DependentUpon>202610110011291_Increase_EmployeeCode_Length.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610150317492_Add_BranchId_To_ProductionOrder_And_PurchaseOrder.cs" />
+    <Compile Include="Migrations\202610150317492_Add_BranchId_To_ProductionOrder_And_PurchaseOrder.Designer.cs">
+      <DependentUpon>202610150317492_Add_BranchId_To_ProductionOrder_And_PurchaseOrder.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610150342019_Add_AttendanceFields_And_Holiday.cs" />
+    <Compile Include="Migrations\202610150342019_Add_AttendanceFields_And_Holiday.Designer.cs">
+      <DependentUpon>202610150342019_Add_AttendanceFields_And_Holiday.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610171237531_Add_PayrollFullFields_Advance_TaxSlab.cs" />
+    <Compile Include="Migrations\202610171237531_Add_PayrollFullFields_Advance_TaxSlab.Designer.cs">
+      <DependentUpon>202610171237531_Add_PayrollFullFields_Advance_TaxSlab.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\Advance.cs" />
+    <Compile Include="Models\AdvanceRecovery.cs" />
     <Compile Include="Models\Entities\Account.cs" />
     <Compile Include="Models\Entities\ApplicationUser.cs" />
     <Compile Include="Models\Entities\Attendance.cs" />
@@ -268,6 +313,7 @@
     <Compile Include="Models\Entities\FabricStock.cs" />
     <Compile Include="Models\Entities\Finishing.cs" />
     <Compile Include="Models\Entities\GRN.cs" />
+    <Compile Include="Models\Entities\Holiday.cs" />
     <Compile Include="Models\Entities\Invoice.cs" />
     <Compile Include="Models\Entities\Leave.cs" />
     <Compile Include="Models\Entities\LeavePolicy.cs" />
@@ -294,6 +340,7 @@
     <Compile Include="Models\Entities\SystemSetting.cs" />
     <Compile Include="Models\Entities\Voucher.cs" />
     <Compile Include="Models\Entities\VoucherDetail.cs" />
+    <Compile Include="Models\Enums\AdvanceStatus.cs" />
     <Compile Include="Models\Enums\AttendanceStatus.cs" />
     <Compile Include="Models\Enums\EmployeeStatus.cs" />
     <Compile Include="Models\Enums\FabricGrade.cs" />
@@ -304,15 +351,20 @@
     <Compile Include="Models\Enums\PaymentStatus.cs" />
     <Compile Include="Models\Enums\PayrollStatus.cs" />
     <Compile Include="Models\Enums\QCStatus.cs" />
+    <Compile Include="Models\Enums\SkillType.cs" />
+    <Compile Include="Models\Enums\UserRole.cs" />
     <Compile Include="Models\Identity\ApplicationRoleManager.cs" />
     <Compile Include="Models\Identity\ApplicationSignInManager.cs" />
     <Compile Include="Models\Identity\ApplicationUserManager.cs" />
+    <Compile Include="Models\TaxSlab.cs" />
+    <Compile Include="Models\ViewModels\AttendanceReportViewModel.cs" />
     <Compile Include="Models\ViewModels\AttendanceViewModel.cs" />
     <Compile Include="Models\ViewModels\BranchViewModel.cs" />
     <Compile Include="Models\ViewModels\ChangePasswordViewModel.cs" />
     <Compile Include="Models\ViewModels\CompanyViewModel.cs" />
     <Compile Include="Models\ViewModels\DashboardViewModel.cs" />
     <Compile Include="Models\ViewModels\DepartmentViewModel.cs" />
+    <Compile Include="Models\ViewModels\DesignationViewModel.cs" />
     <Compile Include="Models\ViewModels\EmployeeViewModel.cs" />
     <Compile Include="Models\ViewModels\ForgotPasswordConfirmationViewModel.cs" />
     <Compile Include="Models\ViewModels\ForgotPasswordViewModel.cs" />
@@ -321,20 +373,25 @@
     <Compile Include="Models\ViewModels\RegisterViewModel.cs" />
     <Compile Include="Models\ViewModels\ReportViewModel.cs" />
     <Compile Include="Models\ViewModels\ResetPasswordViewModel.cs" />
+    <Compile Include="Models\ViewModels\ShiftViewModel.cs" />
     <Compile Include="Models\ViewModels\UserViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AttendanceReportService.cs" />
     <Compile Include="Services\AttendanceService.cs" />
     <Compile Include="Services\BranchService.cs" />
     <Compile Include="Services\CompanyService.cs" />
     <Compile Include="Services\DashboardService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\EmployeeService.cs" />
+    <Compile Include="Services\HolidayService.cs" />
+    <Compile Include="Services\IAttendanceReportService.cs" />
     <Compile Include="Services\IAttendanceService.cs" />
     <Compile Include="Services\IBranchService.cs" />
     <Compile Include="Services\ICompanyService.cs" />
     <Compile Include="Services\IDashboardService.cs" />
     <Compile Include="Services\IEmailService.cs" />
     <Compile Include="Services\IEmployeeService.cs" />
+    <Compile Include="Services\IHolidayService.cs" />
     <Compile Include="Services\IInventoryService.cs" />
     <Compile Include="Services\ILeaveService.cs" />
     <Compile Include="Services\InventoryService.cs" />
@@ -369,6 +426,9 @@
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\account.js" />
+    <Content Include="Scripts\attendance-reports.js" />
+    <Content Include="Scripts\attendance-single.js" />
+    <Content Include="Scripts\attendance.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -377,9 +437,13 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\branch.js" />
+    <Content Include="Scripts\common.js" />
     <Content Include="Scripts\company.js" />
     <Content Include="Scripts\dashboard.js" />
     <Content Include="Scripts\department.js" />
+    <Content Include="Scripts\designation.js" />
+    <Content Include="Scripts\employee.js" />
+    <Content Include="Scripts\holiday.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
     <Content Include="Scripts\jquery-3.7.0.slim.js" />
@@ -390,6 +454,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\shift.js" />
     <Content Include="Scripts\user.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -425,9 +490,28 @@
     <Content Include="Views\Company\Index.cshtml" />
     <Content Include="Views\Department\Index.cshtml" />
     <Content Include="Views\Department\Edit.cshtml" />
+    <Content Include="Views\Designation\Index.cshtml" />
+    <Content Include="Views\Shift\Index.cshtml" />
+    <Content Include="Views\Employee\Index.cshtml" />
+    <Content Include="Views\Employee\Details.cshtml" />
+    <Content Include="Views\Attendance\BulkEntry.cshtml" />
+    <Content Include="Views\Attendance\MonthlyGrid.cshtml" />
+    <Content Include="Views\Attendance\MyAttendance.cshtml" />
+    <Content Include="Views\Holiday\Index.cshtml" />
+    <Content Include="Views\Attendance\SingleEntry.cshtml" />
+    <Content Include="Views\Attendance\Index.cshtml" />
+    <Content Include="Views\AttendanceReport\Index.cshtml" />
+    <Content Include="Views\AttendanceReport\Daily.cshtml" />
+    <Content Include="Views\Shared\_ReportNav.cshtml" />
+    <Content Include="Views\AttendanceReport\Monthly.cshtml" />
+    <Content Include="Views\AttendanceReport\LateOT.cshtml" />
+    <Content Include="Views\AttendanceReport\Department.cshtml" />
+    <Content Include="Views\AttendanceReport\Graphs.cshtml" />
+    <Content Include="Views\AttendanceReport\FullAttendance.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\Base\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />
@@ -459,6 +543,33 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202609271547245_InitialCreate.resx">
       <DependentUpon>202609271547245_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609292332305_AddShiftTypeAndLateAllowance.resx">
+      <DependentUpon>202609292332305_AddShiftTypeAndLateAllowance.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609300108295_AddEmployeeAdvancedFields.resx">
+      <DependentUpon>202609300108295_AddEmployeeAdvancedFields.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610020059341_FixAuditLogAndSessionTypes.resx">
+      <DependentUpon>202610020059341_FixAuditLogAndSessionTypes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610060331162_Add_IsDeleted_To_Branch.resx">
+      <DependentUpon>202610060331162_Add_IsDeleted_To_Branch.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610070018544_Add_BranchId_To_Shift.resx">
+      <DependentUpon>202610070018544_Add_BranchId_To_Shift.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610110011291_Increase_EmployeeCode_Length.resx">
+      <DependentUpon>202610110011291_Increase_EmployeeCode_Length.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610150317492_Add_BranchId_To_ProductionOrder_And_PurchaseOrder.resx">
+      <DependentUpon>202610150317492_Add_BranchId_To_ProductionOrder_And_PurchaseOrder.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610150342019_Add_AttendanceFields_And_Holiday.resx">
+      <DependentUpon>202610150342019_Add_AttendanceFields_And_Holiday.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610171237531_Add_PayrollFullFields_Advance_TaxSlab.resx">
+      <DependentUpon>202610171237531_Add_PayrollFullFields_Advance_TaxSlab.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

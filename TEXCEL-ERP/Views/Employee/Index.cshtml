@@ -1,0 +1,971 @@
+﻿@model List<TEXCEL_ERP.Models.Entities.Employee>
+@using TEXCEL_ERP.Models.Enums
+@{
+    ViewBag.Title = "Employees";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var branches = ViewBag.Branches as List<TEXCEL_ERP.Models.Entities.Branch>;
+    var departments = ViewBag.Departments as List<TEXCEL_ERP.Models.Entities.Department>;
+    var designations = ViewBag.Designations as List<TEXCEL_ERP.Models.Entities.Designation>;
+    var shifts = ViewBag.Shifts as List<TEXCEL_ERP.Models.Entities.Shift>;
+    var canModify = ViewBag.CanModify != null && (bool)ViewBag.CanModify;
+    var canDelete = ViewBag.CanDelete != null && (bool)ViewBag.CanDelete;
+}
+
+@section styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+            .page-header h1 {
+                font-size: 28px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: var(--text-primary);
+            }
+
+                .page-header h1 i {
+                    color: var(--gold);
+                    margin-right: 10px;
+                }
+
+        .btn-add {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(108, 60, 176, 0.30);
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+            .btn-add:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(108, 60, 176, 0.45);
+            }
+
+        /* FILTER */
+        .filter-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px 24px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(108, 60, 176, 0.05);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 14px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .filter-group label {
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+            }
+
+            .filter-group input, .filter-group select {
+                padding: 10px 12px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                width: 100%;
+            }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .btn-filter-primary {
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+
+        .btn-filter-reset {
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+
+        /* TABLE */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+            .table-card table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .table-card thead {
+                background: rgba(108, 60, 176, 0.05);
+            }
+
+            .table-card th {
+                padding: 14px 16px;
+                text-align: left;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                border-bottom: 1px solid var(--border-color);
+                white-space: nowrap;
+            }
+
+            .table-card td {
+                padding: 12px 16px;
+                font-size: 13px;
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--border-color);
+                vertical-align: middle;
+            }
+
+            .table-card tr:last-child td {
+                border-bottom: none;
+            }
+
+            .table-card tbody tr:hover {
+                background: rgba(108, 60, 176, 0.03);
+            }
+
+        .emp-photo {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .emp-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        .emp-code {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .skill-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(20, 184, 166, 0.12);
+            color: #14b8a6;
+            white-space: nowrap;
+        }
+
+        .badge-active {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .badge-inactive {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+        .badge-probation {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(251, 191, 36, 0.15);
+            color: #f59e0b;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-body);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+            font-size: 13px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+            .action-btn:hover {
+                background: rgba(108, 60, 176, 0.10);
+                color: #8b5cf6;
+                border-color: #8b5cf6;
+                text-decoration: none;
+            }
+
+            .action-btn.delete-btn:hover {
+                background: rgba(239, 68, 68, 0.10);
+                color: #ef4444;
+                border-color: #ef4444;
+            }
+
+        /* MODAL */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 20, 0.80);
+            z-index: 2147483647;
+            padding: 80px 16px 30px 16px;
+            overflow: hidden;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+            .modal-bg.show {
+                display: flex !important;
+            }
+
+        .modal-box {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.50);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .modal-box {
+            background: #1a1a2e;
+        }
+
+        .modal-top {
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+            .modal-top h3 {
+                margin: 0;
+                font-size: 17px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .modal-top h3 i {
+                    color: #fbbf24;
+                }
+
+            .modal-top button {
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+
+                .modal-top button:hover {
+                    background: rgba(255,255,255,0.35);
+                }
+
+        .modal-body {
+            padding: 24px 28px;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .section-title:first-child {
+                margin-top: 0;
+            }
+
+            .section-title i {
+                color: var(--gold);
+            }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+
+            .form-group label {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+                .form-group label .required {
+                    color: #ef4444;
+                }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 10px 14px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                width: 100%;
+            }
+
+                .form-group input:focus,
+                .form-group select:focus,
+                .form-group textarea:focus {
+                    border-color: var(--primary-light);
+                    box-shadow: 0 0 0 3px rgba(108, 60, 176, 0.08);
+                }
+
+            .form-group textarea {
+                resize: vertical;
+                min-height: 60px;
+            }
+
+        .modal-actions {
+            padding: 20px 0 0 0;
+            background: transparent;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 24px;
+        }
+
+        [data-theme="dark"] .modal-actions {
+            background: rgba(10, 10, 20, 0.6);
+        }
+
+        .btn-cancel {
+            padding: 10px 22px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+            .btn-cancel:hover {
+                background: var(--bg-body);
+                border-color: var(--primary-light);
+                color: var(--primary-light);
+            }
+
+        .btn-save {
+            padding: 10px 22px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(108, 60, 176, 0.30);
+        }
+
+            .btn-save:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 24px rgba(108, 60, 176, 0.45);
+            }
+
+            .btn-save:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+        /* TOAST */
+        #toastContainer {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.20);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+            max-width: 380px;
+            animation: toastIn 0.3s ease;
+            pointer-events: auto;
+        }
+
+        [data-theme="dark"] .toast {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .toast-success {
+            border-left: 4px solid #10b981;
+        }
+
+            .toast-success i {
+                color: #10b981;
+            }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+            .toast-error i {
+                color: #ef4444;
+            }
+
+        .toast-info {
+            border-left: 4px solid #8b5cf6;
+        }
+
+            .toast-info i {
+                color: #8b5cf6;
+            }
+
+        .toast-hide {
+            animation: toastOut 0.3s ease forwards;
+        }
+
+        @@keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @@keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+        }
+
+        @@media (max-width: 900px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .modal-box {
+                max-width: 100%;
+            }
+        }
+
+        @@media (max-width: 600px) {
+            .form-grid, .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <h1><i class="fas fa-user-tie"></i> Employees</h1>
+    @if (canModify)
+    {
+        <button type="button" class="btn-add" id="openModalBtn">
+            <i class="fas fa-plus"></i> Add New Employee
+        </button>
+    }
+</div>
+
+<!-- FILTERS -->
+<div class="filter-card">
+    @using (Html.BeginForm("Index", "Employee", FormMethod.Get))
+    {
+        <div class="filter-row">
+            <div class="filter-group">
+                <label><i class="fas fa-search"></i> Search</label>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="Name, Code, CNIC, Mobile" />
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-building"></i> Branch</label>
+                <select name="branchId">
+                    <option value="">All Branches</option>
+                    @if (branches != null)
+                    {
+                        foreach (var b in branches)
+                        {
+                            <option value="@b.BranchId" @(ViewBag.BranchId != null && (int)ViewBag.BranchId == b.BranchId ? "selected" : "")>@b.BranchName</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-sitemap"></i> Department</label>
+                <select name="departmentId">
+                    <option value="">All Departments</option>
+                    @if (departments != null)
+                    {
+                        foreach (var d in departments)
+                        {
+                            <option value="@d.DepartmentId" @(ViewBag.DepartmentId != null && (int)ViewBag.DepartmentId == d.DepartmentId ? "selected" : "")>@d.DepartmentName</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-id-badge"></i> Designation</label>
+                <select name="designationId">
+                    <option value="">All Designations</option>
+                    @if (designations != null)
+                    {
+                        foreach (var d in designations)
+                        {
+                            <option value="@d.DesignationId" @(ViewBag.DesignationId != null && (int)ViewBag.DesignationId == d.DesignationId ? "selected" : "")>@d.DesignationName</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label><i class="fas fa-toggle-on"></i> Status</label>
+                <select name="status">
+                    <option value="">All Status</option>
+                    @foreach (EmployeeStatus st in Enum.GetValues(typeof(EmployeeStatus)))
+                    {
+                        <option value="@((int)st)" @(ViewBag.Status != null && (EmployeeStatus)ViewBag.Status == st ? "selected" : "")>@st</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-actions">
+                <a href="@Url.Action("Index", "Employee")" class="btn-filter-reset">
+                    <i class="fas fa-redo"></i> Reset
+                </a>
+                <button type="submit" class="btn-filter-primary">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- TABLE -->
+<div class="table-card">
+    @if (Model != null && Model.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Skill</th>
+                    <th>Mobile</th>
+                    <th>Salary</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span class="emp-photo">@(e.FirstName != null ? e.FirstName.Substring(0,1).ToUpper() : "E")</span>
+                                <div>
+                                    <span class="emp-name">@e.FirstName @e.LastName</span>
+                                    <span class="emp-code">@e.EmployeeCode</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>@(e.Department != null ? e.Department.DepartmentName : "-")</td>
+                        <td>@(e.Designation != null ? e.Designation.DesignationName : "-")</td>
+                        <td>
+                            @if (e.SkillType.HasValue)
+                            {
+                                <span class="skill-badge">@e.SkillType.ToString().Replace("_", " ")</span>
+                            }
+                            else
+                            {
+                                <span style="color:var(--text-muted);">-</span>
+                            }
+                        </td>
+                        <td>@(e.MobileNumber ?? "-")</td>
+                        <td>@e.BasicSalary.ToString("N0")</td>
+                        <td>
+                            @if (!e.IsActive)
+                            {
+                                <span class="badge-inactive">Inactive</span>
+                            }
+                            else if (e.Status == EmployeeStatus.Probation)
+                            {
+                                <span class="badge-probation">Probation</span>
+                            }
+                            else
+                            {
+                                <span class="badge-active">@e.Status</span>
+                            }
+                        </td>
+                        <td style="text-align:right;">
+                            <a href="@Url.Action("Details", "Employee", new { id = e.EmployeeId })" class="action-btn" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            @if (canModify)
+                            {
+                                <button type="button" class="action-btn edit-btn" data-id="@e.EmployeeId" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="action-btn toggle-btn" data-id="@e.EmployeeId" title="Toggle Status">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                            }
+                            @if (canDelete)
+                            {
+                                <button type="button" class="action-btn delete-btn" data-id="@e.EmployeeId" title="Deactivate">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
+            <i class="fas fa-user-tie" style="font-size:48px; opacity:0.5; display:block; margin-bottom:16px;"></i>
+            <h3>No Employees Found</h3>
+            <p>Click "Add New Employee" to create one.</p>
+        </div>
+    }
+</div>
+
+<!-- ============================================= -->
+<!-- MODAL — ADD/EDIT EMPLOYEE — AJAX               -->
+<!-- ============================================= -->
+<div class="modal-bg" id="employeeModal">
+    <div class="modal-box">
+        <div class="modal-top">
+            <h3 id="modalTitle"><i class="fas fa-user-plus"></i> Add New Employee</h3>
+            <button type="button" id="closeModalBtn"><i class="fas fa-times"></i></button>
+        </div>
+
+        <form id="employeeForm" autocomplete="off">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="EmployeeId" name="EmployeeId" value="0" />
+
+            <div class="modal-body">
+
+                <!-- BASIC INFO -->
+                <div class="section-title"><i class="fas fa-user"></i> Basic Information</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Employee Code <span class="required">*</span></label>
+                        <input type="text" id="EmployeeCode" name="EmployeeCode" readonly style="opacity:0.7;" placeholder="Auto-generated" />
+                    </div>
+                    <div class="form-group">
+                        <label>First Name <span class="required">*</span></label>
+                        <input type="text" id="FirstName" name="FirstName" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="LastName" name="LastName" />
+                    </div>
+                    <div class="form-group">
+                        <label>CNIC <span class="required">*</span></label>
+                        <input type="text" id="CNIC" name="CNIC" placeholder="12345-1234567-1" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth <span class="required">*</span></label>
+                        <input type="date" id="DateOfBirth" name="DateOfBirth" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Gender <span class="required">*</span></label>
+                        <select id="Gender" name="Gender" required>
+                            <option value="">-- Select --</option>
+                            @foreach (Gender g in Enum.GetValues(typeof(Gender)))
+                            {
+                                <option value="@((int)g)">@g</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CONTACT INFO -->
+                <div class="section-title"><i class="fas fa-phone"></i> Contact Information</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Mobile Number <span class="required">*</span></label>
+                        <input type="text" id="MobileNumber" name="MobileNumber" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="Email" name="Email" />
+                    </div>
+                    <div class="form-group full">
+                        <label>Address</label>
+                        <textarea id="CurrentAddress" name="CurrentAddress" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- EMPLOYMENT INFO -->
+                <div class="section-title"><i class="fas fa-briefcase"></i> Employment Information</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Branch <span class="required">*</span></label>
+                        <select id="BranchId" name="BranchId" required>
+                            <option value="">-- Select Branch --</option>
+                            @if (branches != null)
+                            {
+                                foreach (var b in branches)
+                                {
+                                    <option value="@b.BranchId">@b.BranchName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Department <span class="required">*</span></label>
+                        <select id="DepartmentId" name="DepartmentId" required>
+                            <option value="">-- Select Department --</option>
+                            @if (departments != null)
+                            {
+                                foreach (var d in departments)
+                                {
+                                    <option value="@d.DepartmentId">@d.DepartmentName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Designation <span class="required">*</span></label>
+                        <select id="DesignationId" name="DesignationId" required>
+                            <option value="">-- Select Designation --</option>
+                            @if (designations != null)
+                            {
+                                foreach (var d in designations)
+                                {
+                                    <option value="@d.DesignationId">@d.DesignationName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Shift</label>
+                        <select id="ShiftId" name="ShiftId">
+                            <option value="">-- Select Shift --</option>
+                            @if (shifts != null)
+                            {
+                                foreach (var s in shifts)
+                                {
+                                    <option value="@s.ShiftId">@s.ShiftName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Skill Type</label>
+                        <select id="SkillType" name="SkillType">
+                            <option value="">-- Select Skill --</option>
+                            @foreach (SkillType sk in Enum.GetValues(typeof(SkillType)))
+                            {
+                                <option value="@((int)sk)">@sk.ToString().Replace("_", " ")</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Machine Assigned</label>
+                        <input type="text" id="MachineAssigned" name="MachineAssigned" placeholder="e.g., Juki, Overlock" />
+                    </div>
+                    <div class="form-group">
+                        <label>Joining Date <span class="required">*</span></label>
+                        <input type="date" id="JoiningDate" name="JoiningDate" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Employment Status <span class="required">*</span></label>
+                        <select id="Status" name="Status" required>
+                            @foreach (EmployeeStatus st in Enum.GetValues(typeof(EmployeeStatus)))
+                            {
+                                <option value="@((int)st)">@st</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SALARY INFO -->
+                <div class="section-title"><i class="fas fa-money-bill-wave"></i> Salary Information</div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Basic Salary <span class="required">*</span></label>
+                        <input type="number" id="BasicSalary" name="BasicSalary" step="0.01" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Piece Rate</label>
+                        <input type="number" id="PieceRate" name="PieceRate" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label>Bank Name</label>
+                        <input type="text" id="BankName" name="BankName" />
+                    </div>
+                    <div class="form-group">
+                        <label>Bank Account Number</label>
+                        <input type="text" id="BankAccountNumber" name="BankAccountNumber" />
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn-save" id="saveBtn">
+                        <i class="fas fa-save"></i> <span id="submitBtnText">Create Employee</span>
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/employee.js"></script>
+}

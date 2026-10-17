@@ -1,0 +1,735 @@
+﻿@model TEXCEL_ERP.Models.ViewModels.EmployeeAttendanceRow
+@using TEXCEL_ERP.Models.Enums
+@{
+    ViewBag.Title = "Single Attendance Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var employees = ViewBag.Employees as List<TEXCEL_ERP.Models.Entities.Employee>;
+    var attendanceDate = (DateTime)ViewBag.AttendanceDate;
+    var selectedEmployeeId = ViewBag.SelectedEmployeeId as int?;
+    var canModify = ViewBag.CanModify != null && (bool)ViewBag.CanModify;
+}
+
+@section styles {
+    <style>
+        /* ============================================= */
+        /* PAGE HEADER — Compact Blue Theme              */
+        /* ============================================= */
+        .page-header-single {
+            background: linear-gradient(135deg, #3b82f6, #14b8a6);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .page-header-single .header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.20);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .page-header-single h1 {
+                font-size: 20px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: white;
+            }
+
+            .page-header-single p {
+                font-size: 12px;
+                margin: 4px 0 0 0;
+                color: rgba(255, 255, 255, 0.85);
+            }
+
+        /* Back button */
+        .page-back-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+            .page-back-btn:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.60);
+                color: white;
+                text-decoration: none;
+                transform: translateX(-4px);
+            }
+
+        /* ============================================= */
+        /* 2-COLUMN LAYOUT                               */
+        /* ============================================= */
+        .single-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Left Card — Select Employee */
+        .select-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.06);
+        }
+
+            .select-card .card-heading {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid var(--border-color);
+            }
+
+                .select-card .card-heading i {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    background: linear-gradient(135deg, #3b82f6, #14b8a6);
+                    color: white;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                }
+
+        .select-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+            .select-form-group label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+                .select-form-group label i {
+                    color: #3b82f6;
+                }
+
+            .select-form-group select,
+            .select-form-group input {
+                padding: 11px 14px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                transition: all 0.3s;
+                width: 100%;
+            }
+
+                .select-form-group select:focus,
+                .select-form-group input:focus {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.10);
+                }
+
+        .btn-load {
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3b82f6, #14b8a6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.30);
+            transition: all 0.3s;
+        }
+
+            .btn-load:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 28px rgba(59, 130, 246, 0.40);
+            }
+
+        /* Right Card — Attendance Form */
+        .attendance-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px 32px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.06);
+        }
+
+        .emp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .emp-info h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text-primary);
+        }
+
+        .emp-info p {
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+            .emp-info p strong {
+                color: #3b82f6;
+                font-weight: 700;
+            }
+
+        .shift-badge {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.10), rgba(20, 184, 166, 0.10));
+            border: 1.5px solid rgba(59, 130, 246, 0.25);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #3b82f6;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .entry-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .entry-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .entry-group label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+                .entry-group label i {
+                    color: #3b82f6;
+                    font-size: 11px;
+                }
+
+            .entry-group input,
+            .entry-group select,
+            .entry-group textarea {
+                padding: 12px 14px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 14px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                transition: all 0.3s;
+                width: 100%;
+            }
+
+                .entry-group input:focus,
+                .entry-group select:focus,
+                .entry-group textarea:focus {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.10);
+                }
+
+        /* Calculated display boxes */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.03);
+            border: 1.5px dashed rgba(59, 130, 246, 0.20);
+            border-radius: 12px;
+        }
+
+        .calc-box {
+            text-align: center;
+        }
+
+            .calc-box .calc-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                margin-bottom: 8px;
+            }
+
+            .calc-box .calc-value {
+                font-size: 24px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                color: var(--text-primary);
+            }
+
+            .calc-box.calc-ot .calc-value {
+                color: #10b981;
+            }
+
+            .calc-box.calc-less .calc-value {
+                color: #ef4444;
+            }
+
+        .remarks-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+            .remarks-group label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                color: var(--text-secondary);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+                .remarks-group label i {
+                    color: #3b82f6;
+                }
+
+            .remarks-group textarea {
+                padding: 12px 14px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border-color);
+                background: var(--bg-body);
+                color: var(--text-primary);
+                font-size: 13px;
+                outline: none;
+                font-family: 'Inter', sans-serif;
+                resize: vertical;
+                min-height: 70px;
+            }
+
+                .remarks-group textarea:focus {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.10);
+                }
+
+        .verify-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            background: rgba(16, 185, 129, 0.05);
+            border: 1.5px solid rgba(16, 185, 129, 0.20);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+            .verify-row input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                accent-color: #10b981;
+                cursor: pointer;
+            }
+
+            .verify-row label {
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--text-primary);
+                cursor: pointer;
+                margin: 0;
+                text-transform: none;
+                letter-spacing: 0;
+            }
+
+        .footer-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-save {
+            padding: 12px 32px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3b82f6, #14b8a6);
+            color: white;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.30);
+            transition: all 0.3s;
+        }
+
+            .btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 28px rgba(59, 130, 246, 0.45);
+            }
+
+            .btn-save:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+        .btn-reset {
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+            .btn-reset:hover {
+                background: var(--bg-body);
+                border-color: #3b82f6;
+                color: #3b82f6;
+                text-decoration: none;
+            }
+
+        /* Empty State (right card) */
+        .empty-state {
+            text-align: center;
+            padding: 80px 30px;
+            color: var(--text-muted);
+        }
+
+            .empty-state i {
+                font-size: 64px;
+                opacity: 0.3;
+                display: block;
+                margin-bottom: 20px;
+                color: #3b82f6;
+            }
+
+            .empty-state h3 {
+                font-size: 18px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                margin: 0 0 8px;
+            }
+
+            .empty-state p {
+                font-size: 13px;
+                margin: 0;
+                line-height: 1.6;
+            }
+
+        /* Toast */
+        #toastContainer {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.20);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+            max-width: 400px;
+            pointer-events: auto;
+            border-left: 4px solid #3b82f6;
+        }
+
+        [data-theme="dark"] .toast {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .toast-success {
+            border-left-color: #10b981;
+        }
+
+            .toast-success i {
+                color: #10b981;
+            }
+
+        .toast-error {
+            border-left-color: #ef4444;
+        }
+
+            .toast-error i {
+                color: #ef4444;
+            }
+
+        /* Responsive */
+        @@media (max-width: 1000px) {
+            .single-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 700px) {
+            .entry-grid,
+            .calc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<div id="toastContainer"></div>
+
+<!-- ============================================= -->
+<!-- COMPACT HEADER                                -->
+<!-- ============================================= -->
+<div class="page-header-single">
+    <a href="@Url.Action("Index", "Attendance")" class="page-back-btn" title="Back to Attendance">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div class="header-icon">
+        <i class="fas fa-user-check"></i>
+    </div>
+    <div>
+        <h1>Single Attendance Entry</h1>
+        <p>Mark attendance for a single employee</p>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- 2-COLUMN LAYOUT                               -->
+<!-- ============================================= -->
+<div class="single-layout">
+
+    <!-- LEFT: SELECT EMPLOYEE CARD -->
+    <div class="select-card">
+        <div class="card-heading">
+            <i class="fas fa-search"></i>
+            <span>Select Employee</span>
+        </div>
+
+        <form method="get" action="@Url.Action("SingleEntry", "Attendance")">
+            <div class="select-form-group">
+                <label for="employeeId">
+                    <i class="fas fa-user"></i> Employee
+                </label>
+                <select name="employeeId" id="employeeId" required>
+                    <option value="">-- Select Employee --</option>
+                    @if (employees != null)
+                    {
+                        foreach (var e in employees)
+                        {
+                            <option value="@e.EmployeeId" @(selectedEmployeeId == e.EmployeeId ? "selected" : "")>
+                                @e.EmployeeCode - @e.FirstName @e.LastName
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="select-form-group">
+                <label for="date">
+                    <i class="fas fa-calendar"></i> Date
+                </label>
+                <input type="date" name="date" id="date" value="@attendanceDate.ToString("yyyy-MM-dd")" required />
+            </div>
+
+            <button type="submit" class="btn-load">
+                <i class="fas fa-arrow-right"></i> Load Employee
+            </button>
+        </form>
+    </div>
+
+    <!-- RIGHT: ATTENDANCE FORM CARD -->
+    <div class="attendance-card">
+        @if (Model != null)
+        {
+            <div id="singleEntryCard">
+                <input type="hidden" id="EmployeeId" value="@Model.EmployeeId" />
+                <input type="hidden" id="AttendanceDate" value="@attendanceDate.ToString("yyyy-MM-dd")" />
+
+                <!-- Employee Header -->
+                <div class="emp-header">
+                    <div class="emp-info">
+                        <h2>@Model.EmployeeName</h2>
+                        <p>
+                            <strong>@Model.EmployeeCode</strong>
+                            <span> • </span>
+                            <span>@attendanceDate.ToString("dd MMM yyyy")</span>
+                        </p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.ShiftName) && Model.ShiftName != "-")
+                    {
+                        <div class="shift-badge">
+                            <i class="fas fa-clock"></i>
+                            @Model.ShiftName : @Model.ShiftStartTime.ToString(@"hh\:mm") - @Model.ShiftEndTime.ToString(@"hh\:mm")
+                        </div>
+                    }
+                </div>
+
+                <!-- Time Entry -->
+                <div class="entry-grid">
+                    <div class="entry-group">
+                        <label><i class="fas fa-sign-in-alt"></i> Check In</label>
+                        <input type="time" id="CheckIn"
+                               value="@(Model.CheckIn.HasValue ? Model.CheckIn.Value.ToString(@"hh\:mm") : "")" />
+                    </div>
+
+                    <div class="entry-group">
+                        <label><i class="fas fa-sign-out-alt"></i> Check Out</label>
+                        <input type="time" id="CheckOut"
+                               value="@(Model.CheckOut.HasValue ? Model.CheckOut.Value.ToString(@"hh\:mm") : "")" />
+                    </div>
+
+                    <div class="entry-group">
+                        <label><i class="fas fa-info-circle"></i> Status</label>
+                        <select id="Status">
+                            <option value="1" @(Model.Status == AttendanceStatus.Present ? "selected" : "")>Present</option>
+                            <option value="2" @(Model.Status == AttendanceStatus.Absent ? "selected" : "")>Absent</option>
+                            <option value="3" @(Model.Status == AttendanceStatus.Leave ? "selected" : "")>Leave</option>
+                            <option value="4" @(Model.Status == AttendanceStatus.HalfDay ? "selected" : "")>Half Day</option>
+                            <option value="5" @(Model.Status == AttendanceStatus.Holiday ? "selected" : "")>Holiday</option>
+                            <option value="6" @(Model.Status == AttendanceStatus.Weekend ? "selected" : "")>Weekend</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Calculated Values -->
+                <div class="calc-grid">
+                    <div class="calc-box">
+                        <div class="calc-label">Total Worked</div>
+                        <div class="calc-value" id="WorkedHours">@Model.WorkedHours.ToString("0.00")</div>
+                    </div>
+                    <div class="calc-box calc-ot">
+                        <div class="calc-label">Overtime</div>
+                        <div class="calc-value" id="OvertimeHours">@Model.OvertimeHours.ToString("0.00")</div>
+                    </div>
+                    <div class="calc-box calc-less">
+                        <div class="calc-label">Less Time</div>
+                        <div class="calc-value" id="LessTimeHours">@Model.LessTimeHours.ToString("0.00")</div>
+                    </div>
+                </div>
+
+                <!-- Remarks -->
+                <div class="remarks-group">
+                    <label for="Remarks"><i class="fas fa-comment-alt"></i> Remarks</label>
+                    <textarea id="Remarks" placeholder="Optional remarks...">@Model.Remarks</textarea>
+                </div>
+
+                <!-- Verify -->
+                <div class="verify-row">
+                    <input type="checkbox" id="IsVerified" @(Model.IsVerified ? "checked" : "") />
+                    <label for="IsVerified">Mark as Verified (Signed)</label>
+                </div>
+
+                <!-- Actions -->
+                @if (canModify)
+                {
+                    <div class="footer-actions">
+                        <a href="@Url.Action("SingleEntry", "Attendance")" class="btn-reset">
+                            <i class="fas fa-redo"></i> Reset
+                        </a>
+                        <button type="button" class="btn-save" id="saveSingleBtn">
+                            <i class="fas fa-save"></i> Save Attendance
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <!-- Shift data for JS -->
+            <div id="shiftData"
+                 data-shift-start="@Model.ShiftStartTime.ToString(@"hh\:mm")"
+                 data-shift-end="@Model.ShiftEndTime.ToString(@"hh\:mm")"
+                 data-break="@Model.BreakDuration"
+                 style="display:none;"></div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-user-check"></i>
+                <h3>No Employee Selected</h3>
+                <p>Select an employee from the left panel<br />and click "Load Employee" to mark attendance.</p>
+            </div>
+        }
+    </div>
+
+</div>
+
+@section scripts {
+    <script src="~/Scripts/attendance-single.js"></script>
+}

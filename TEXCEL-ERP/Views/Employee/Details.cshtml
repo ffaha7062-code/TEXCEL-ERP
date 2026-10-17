@@ -1,0 +1,373 @@
+﻿@model TEXCEL_ERP.Models.Entities.Employee
+@{
+    ViewBag.Title = "Employee Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles {
+    <style>
+        .details-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .details-header {
+            background: linear-gradient(135deg, #6c3cb0 0%, #8b5cf6 100%);
+            border-radius: 20px;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 12px 40px rgba(108, 60, 176, 0.25);
+            flex-wrap: wrap;
+        }
+
+            .details-header .photo {
+                width: 110px;
+                height: 110px;
+                border-radius: 50%;
+                border: 4px solid #fbbf24;
+                object-fit: cover;
+                background: rgba(255,255,255,0.15);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 42px;
+                font-weight: 700;
+                flex-shrink: 0;
+            }
+
+            .details-header .info h1 {
+                font-size: 28px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0 0 6px 0;
+            }
+
+            .details-header .info .meta {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+                font-size: 13px;
+                opacity: 0.9;
+            }
+
+                .details-header .info .meta span {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px 28px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(108, 60, 176, 0.05);
+        }
+
+            .card h3 {
+                font-family: 'Space Grotesk', sans-serif;
+                font-size: 16px;
+                font-weight: 700;
+                margin: 0 0 16px 0;
+                padding-bottom: 12px;
+                border-bottom: 2px solid var(--border-color);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--text-primary);
+            }
+
+                .card h3 i {
+                    color: var(--gold);
+                }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+            .info-row:last-child {
+                border-bottom: none;
+            }
+
+            .info-row .label {
+                color: var(--text-secondary);
+                font-weight: 500;
+            }
+
+            .info-row .value {
+                color: var(--text-primary);
+                font-weight: 600;
+                text-align: right;
+            }
+
+        .badge-active {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .badge-inactive {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(239, 68, 68, 0.10);
+            color: #ef4444;
+        }
+
+        .badge-probation {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(251, 191, 36, 0.15);
+            color: #f59e0b;
+        }
+
+        .doc-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+            .doc-preview img {
+                width: 100%;
+                height: 120px;
+                object-fit: cover;
+                border-radius: 10px;
+                border: 2px solid var(--border-color);
+                cursor: pointer;
+            }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn-edit {
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6c3cb0, #8b5cf6);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(108, 60, 176, 0.30);
+        }
+
+            .btn-edit:hover {
+                transform: translateY(-2px);
+                color: white;
+            }
+
+        .btn-back {
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .btn-back:hover {
+                background: var(--bg-body);
+                border-color: var(--primary-light);
+                color: var(--primary-light);
+                text-decoration: none;
+            }
+
+        .btn-print {
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+            .btn-print:hover {
+                background: var(--bg-body);
+                border-color: var(--primary-light);
+                color: var(--primary-light);
+            }
+
+        @@media (max-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .details-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .doc-preview {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+}
+
+<div class="details-container">
+
+    <!-- HEADER -->
+    <div class="details-header">
+        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        {
+            <img src="@Model.PhotoPath" class="photo" alt="Photo" />
+        }
+        else
+        {
+            <div class="photo">@(Model.FirstName != null ? Model.FirstName.Substring(0,1).ToUpper() : "E")</div>
+        }
+        <div class="info">
+            <h1>@Model.FirstName @Model.LastName</h1>
+            <div class="meta">
+                <span><i class="fas fa-hashtag"></i> @Model.EmployeeCode</span>
+                <span><i class="fas fa-id-badge"></i> @(Model.Designation != null ? Model.Designation.DesignationName : "-")</span>
+                <span><i class="fas fa-building"></i> @(Model.Branch != null ? Model.Branch.BranchName : "-")</span>
+                <span><i class="fas fa-sitemap"></i> @(Model.Department != null ? Model.Department.DepartmentName : "-")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAILS GRID -->
+    <div class="details-grid">
+
+        <!-- PERSONAL INFO -->
+        <div class="card">
+            <h3><i class="fas fa-user"></i> Personal Information</h3>
+            <div class="info-row"><span class="label">Father/Husband Name</span><span class="value">@(Model.FatherHusbandName ?? "-")</span></div>
+            <div class="info-row"><span class="label">CNIC</span><span class="value">@Model.CNIC</span></div>
+            <div class="info-row"><span class="label">Date of Birth</span><span class="value">@Model.DateOfBirth.ToString("dd MMM yyyy")</span></div>
+            <div class="info-row"><span class="label">Gender</span><span class="value">@Model.Gender</span></div>
+            <div class="info-row"><span class="label">Nationality</span><span class="value">@(Model.Nationality ?? "-")</span></div>
+            <div class="info-row"><span class="label">Religion</span><span class="value">@(Model.Religion ?? "-")</span></div>
+            <div class="info-row"><span class="label">Marital Status</span><span class="value">@(Model.MaritalStatus ?? "-")</span></div>
+            <div class="info-row"><span class="label">Blood Group</span><span class="value">@(Model.BloodGroup ?? "-")</span></div>
+        </div>
+
+        <!-- CONTACT INFO -->
+        <div class="card">
+            <h3><i class="fas fa-phone"></i> Contact Information</h3>
+            <div class="info-row"><span class="label">Mobile Number</span><span class="value">@Model.MobileNumber</span></div>
+            <div class="info-row"><span class="label">Emergency Contact</span><span class="value">@(Model.EmergencyContact ?? "-")</span></div>
+            <div class="info-row"><span class="label">Email</span><span class="value">@(Model.Email ?? "-")</span></div>
+            <div class="info-row"><span class="label">Current Address</span><span class="value">@(Model.CurrentAddress ?? "-")</span></div>
+            <div class="info-row"><span class="label">Permanent Address</span><span class="value">@(Model.PermanentAddress ?? "-")</span></div>
+        </div>
+
+        <!-- EMPLOYMENT INFO -->
+        <div class="card">
+            <h3><i class="fas fa-briefcase"></i> Employment Information</h3>
+            <div class="info-row"><span class="label">Joining Date</span><span class="value">@Model.JoiningDate.ToString("dd MMM yyyy")</span></div>
+            <div class="info-row"><span class="label">Confirmation Date</span><span class="value">@(Model.ConfirmationDate.HasValue ? Model.ConfirmationDate.Value.ToString("dd MMM yyyy") : "-")</span></div>
+            <div class="info-row">
+                <span class="label">Status</span>
+                <span class="value">
+                    @if (!Model.IsActive)
+                    {
+                        <span class="badge-inactive">Inactive</span>
+                    }
+                    else if (Model.Status == TEXCEL_ERP.Models.Enums.EmployeeStatus.Probation)
+                    {
+                        <span class="badge-probation">Probation</span>
+                    }
+                    else
+                    {
+                        <span class="badge-active">@Model.Status</span>
+                    }
+                </span>
+            </div>
+            <div class="info-row"><span class="label">Shift</span><span class="value">@(Model.Shift != null ? Model.Shift.ShiftName : "-")</span></div>
+            <div class="info-row"><span class="label">Skill Type</span><span class="value">@(Model.SkillType.HasValue ? Model.SkillType.ToString().Replace("_", " ") : "-")</span></div>
+            <div class="info-row"><span class="label">Machine Assigned</span><span class="value">@(Model.MachineAssigned ?? "-")</span></div>
+            <div class="info-row"><span class="label">Reporting Manager</span><span class="value">@(Model.ReportingManager != null ? Model.ReportingManager.FirstName + " " + Model.ReportingManager.LastName : "-")</span></div>
+        </div>
+
+        <!-- SALARY INFO -->
+        <div class="card">
+            <h3><i class="fas fa-money-bill-wave"></i> Salary Information</h3>
+            <div class="info-row"><span class="label">Basic Salary</span><span class="value">PKR @Model.BasicSalary.ToString("N0")</span></div>
+            <div class="info-row"><span class="label">Piece Rate</span><span class="value">@(Model.PieceRate.HasValue ? "PKR " + Model.PieceRate.Value.ToString("N2") : "-")</span></div>
+            <div class="info-row"><span class="label">Bank Name</span><span class="value">@(Model.BankName ?? "-")</span></div>
+            <div class="info-row"><span class="label">Bank Account</span><span class="value">@(Model.BankAccountNumber ?? "-")</span></div>
+            <div class="info-row"><span class="label">Bank Branch</span><span class="value">@(Model.BankBranchName ?? "-")</span></div>
+        </div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    @if (!string.IsNullOrEmpty(Model.PhotoPath) || !string.IsNullOrEmpty(Model.CNICFrontPath) || !string.IsNullOrEmpty(Model.CNICBackPath))
+    {
+        <div class="card" style="margin-top: 24px;">
+            <h3><i class="fas fa-file-image"></i> Documents</h3>
+            <div class="doc-preview">
+                @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                {
+                    <a href="@Model.PhotoPath" target="_blank"><img src="@Model.PhotoPath" alt="Photo" /></a>
+                }
+                @if (!string.IsNullOrEmpty(Model.CNICFrontPath))
+                {
+                    <a href="@Model.CNICFrontPath" target="_blank"><img src="@Model.CNICFrontPath" alt="CNIC Front" /></a>
+                }
+                @if (!string.IsNullOrEmpty(Model.CNICBackPath))
+                {
+                    <a href="@Model.CNICBackPath" target="_blank"><img src="@Model.CNICBackPath" alt="CNIC Back" /></a>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- ACTIONS -->
+    @{
+        var canModifyDetails = ViewBag.CanModify != null && (bool)ViewBag.CanModify;
+    }
+
+    <div class="actions">
+        <a href="@Url.Action("Index", "Employee")" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+        <button type="button" class="btn-print" onclick="window.print();">
+            <i class="fas fa-print"></i> Print
+        </button>
+        @if (canModifyDetails)
+        {
+            <a href="@Url.Action("Index", "Employee")" class="btn-edit" title="Edit from list">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+        }
+    </div>
+</div>

@@ -1,0 +1,438 @@
+﻿@{
+    ViewBag.Title = "Attendance Reports";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var canModify = ViewBag.CanModify != null && (bool)ViewBag.CanModify;
+    var branchName = ViewBag.BranchName as string;
+    var isSuperAdmin = ViewBag.IsSuperAdmin != null && (bool)ViewBag.IsSuperAdmin;
+    var totalEmployees = ViewBag.TotalEmployees != null ? (int)ViewBag.TotalEmployees : 0;
+    var todayAttendance = ViewBag.TodayAttendance != null ? (int)ViewBag.TodayAttendance : 0;
+    var monthAttendance = ViewBag.MonthAttendance != null ? (int)ViewBag.MonthAttendance : 0;
+}
+
+@section styles {
+    <style>
+        /* ============================================= */
+        /* PAGE HEADER                                    */
+        /* ============================================= */
+        .page-header-reports {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.30);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .page-header-reports .header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.20);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .page-header-reports h1 {
+                font-size: 20px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                margin: 0;
+                color: white;
+            }
+
+            .page-header-reports p {
+                font-size: 12px;
+                margin: 4px 0 0 0;
+                color: rgba(255, 255, 255, 0.85);
+            }
+
+        /* Back Button */
+        .page-back-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+            .page-back-btn:hover {
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.60);
+                color: white;
+                text-decoration: none;
+                transform: translateX(-4px);
+            }
+
+        /* ============================================= */
+        /* STATS ROW                                      */
+        /* ============================================= */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-mini {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px 22px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s;
+        }
+
+            .stat-mini:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(14, 165, 233, 0.10);
+            }
+
+            .stat-mini .stat-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                flex-shrink: 0;
+            }
+
+            .stat-mini.emp .stat-icon {
+                background: rgba(14, 165, 233, 0.12);
+                color: #0ea5e9;
+            }
+
+            .stat-mini.today .stat-icon {
+                background: rgba(16, 185, 129, 0.12);
+                color: #10b981;
+            }
+
+            .stat-mini.month .stat-icon {
+                background: rgba(139, 92, 246, 0.12);
+                color: #8b5cf6;
+            }
+
+            .stat-mini .stat-num {
+                font-size: 22px;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+                color: var(--text-primary);
+                line-height: 1;
+            }
+
+            .stat-mini .stat-lbl {
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-top: 4px;
+            }
+
+        /* ============================================= */
+        /* REPORTS GRID                                   */
+        /* ============================================= */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .report-card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            padding: 28px 24px;
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(108, 60, 176, 0.05);
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+        }
+
+            .report-card::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                transform: scaleX(0);
+                transition: transform 0.35s;
+            }
+
+            .report-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 50px rgba(108, 60, 176, 0.18);
+                border-color: transparent;
+            }
+
+                .report-card:hover::after {
+                    transform: scaleX(1);
+                }
+
+            .report-card .report-icon {
+                width: 72px;
+                height: 72px;
+                border-radius: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 30px;
+                color: white;
+                transition: transform 0.35s;
+            }
+
+            .report-card:hover .report-icon {
+                transform: scale(1.10) rotate(-4deg);
+            }
+
+            .report-card .report-title {
+                font-size: 15px;
+                font-weight: 700;
+                font-family: 'Space Grotesk', sans-serif;
+                color: var(--text-primary);
+                text-align: center;
+                letter-spacing: 0.3px;
+                transition: color 0.3s;
+            }
+
+            .report-card .report-subtitle {
+                font-size: 11px;
+                color: var(--text-muted);
+                text-align: center;
+                margin-top: -8px;
+            }
+
+            /* Card colors */
+            .report-card.daily .report-icon {
+                background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+                box-shadow: 0 10px 30px rgba(14, 165, 233, 0.35);
+            }
+
+            .report-card.daily::after {
+                background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            }
+
+            .report-card.daily:hover .report-title {
+                color: #0ea5e9;
+            }
+
+            .report-card.monthly .report-icon {
+                background: linear-gradient(135deg, #8b5cf6, #a855f7);
+                box-shadow: 0 10px 30px rgba(139, 92, 246, 0.35);
+            }
+
+            .report-card.monthly::after {
+                background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            }
+
+            .report-card.monthly:hover .report-title {
+                color: #8b5cf6;
+            }
+
+            .report-card.lateot .report-icon {
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+                box-shadow: 0 10px 30px rgba(245, 158, 11, 0.35);
+            }
+
+            .report-card.lateot::after {
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            }
+
+            .report-card.lateot:hover .report-title {
+                color: #f59e0b;
+            }
+
+            .report-card.dept .report-icon {
+                background: linear-gradient(135deg, #10b981, #14b8a6);
+                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.35);
+            }
+
+            .report-card.dept::after {
+                background: linear-gradient(135deg, #10b981, #14b8a6);
+            }
+
+            .report-card.dept:hover .report-title {
+                color: #10b981;
+            }
+
+            .report-card.graph .report-icon {
+                background: linear-gradient(135deg, #ec4899, #f43f5e);
+                box-shadow: 0 10px 30px rgba(236, 72, 153, 0.35);
+            }
+
+            .report-card.graph::after {
+                background: linear-gradient(135deg, #ec4899, #f43f5e);
+            }
+
+            .report-card.graph:hover .report-title {
+                color: #ec4899;
+            }
+
+            .report-card.full .report-icon {
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                box-shadow: 0 10px 30px rgba(99, 102, 241, 0.35);
+            }
+
+            .report-card.full::after {
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            }
+
+            .report-card.full:hover .report-title {
+                color: #6366f1;
+            }
+
+        /* ============================================= */
+        /* RESPONSIVE                                     */
+        /* ============================================= */
+        @@media (max-width: 1100px) {
+            .reports-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 700px) {
+            .stats-row,
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<!-- ============================================= -->
+<!-- COMPACT HEADER                                 -->
+<!-- ============================================= -->
+@Html.Partial("_ReportNav")
+
+<!-- Existing page header -->
+<div class="page-header-reports">
+    <a href="@Url.Action("Index", "Attendance")" class="page-back-btn" title="Back to Attendance">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div class="header-icon">
+        <i class="fas fa-chart-bar"></i>
+    </div>
+    <div>
+        <h1>Attendance Reports</h1>
+        <p>@branchName • Analyze your attendance data</p>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- STATS ROW                                      -->
+<!-- ============================================= -->
+<div class="stats-row">
+    <div class="stat-mini emp">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div>
+            <div class="stat-num">@totalEmployees</div>
+            <div class="stat-lbl">Total Employees</div>
+        </div>
+    </div>
+
+    <div class="stat-mini today">
+        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div>
+            <div class="stat-num">@todayAttendance</div>
+            <div class="stat-lbl">Today's Records</div>
+        </div>
+    </div>
+
+    <div class="stat-mini month">
+        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div>
+            <div class="stat-num">@monthAttendance</div>
+            <div class="stat-lbl">This Month Records</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- REPORTS GRID — 6 CARDS                         -->
+<!-- ============================================= -->
+<div class="reports-grid">
+
+    <!-- 1. DAILY REPORT -->
+    <a href="@Url.Action("Daily", "AttendanceReport")" class="report-card daily">
+        <div class="report-icon">
+            <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="report-title">Daily Report</div>
+        <div class="report-subtitle">Ek din ki poori summary</div>
+    </a>
+
+    <!-- 2. MONTHLY SUMMARY -->
+    <a href="@Url.Action("Monthly", "AttendanceReport")" class="report-card monthly">
+        <div class="report-icon">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="report-title">Monthly Summary</div>
+        <div class="report-subtitle">Employee-wise monthly totals</div>
+    </a>
+
+    <!-- 3. LATE & OT -->
+    <a href="@Url.Action("LateOT", "AttendanceReport")" class="report-card lateot">
+        <div class="report-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="report-title">Late & OT Report</div>
+        <div class="report-subtitle">Late arrivals + Overtime</div>
+    </a>
+
+    <!-- 4. DEPARTMENT-WISE -->
+    <a href="@Url.Action("Department", "AttendanceReport")" class="report-card dept">
+        <div class="report-icon">
+            <i class="fas fa-sitemap"></i>
+        </div>
+        <div class="report-title">Department-Wise</div>
+        <div class="report-subtitle">Department comparison</div>
+    </a>
+
+    <!-- 5. GRAPH ANALYTICS -->
+    <a href="@Url.Action("Graphs", "AttendanceReport")" class="report-card graph">
+        <div class="report-icon">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="report-title">Graph Analytics</div>
+        <div class="report-subtitle">Charts &amp; visual trends</div>
+    </a>
+
+    <!-- 6. FULL ATTENDANCE -->
+    <a href="@Url.Action("FullAttendance", "AttendanceReport")" class="report-card full">
+        <div class="report-icon">
+            <i class="fas fa-list-alt"></i>
+        </div>
+        <div class="report-title">Full Attendance</div>
+        <div class="report-subtitle">Complete filterable history</div>
+    </a>
+
+</div>
